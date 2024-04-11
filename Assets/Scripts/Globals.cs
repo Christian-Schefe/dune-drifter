@@ -33,7 +33,7 @@ public class Globals : MonoBehaviour
         Log.Debug("Found types with attribute: ", typesWithAttribute);
         foreach (var type in typesWithAttribute)
         {
-            globals.Add(type, FindObjectOfType(type));
+            if (!globals.ContainsKey(type)) globals.Add(type, FindObjectOfType(type));
         }
         Log.Debug("Current globals: ", globals);
     }
