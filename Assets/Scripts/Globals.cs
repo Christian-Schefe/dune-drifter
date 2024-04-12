@@ -26,16 +26,8 @@ public class Globals : MonoBehaviour
 
     private void Awake()
     {
-        DontDestroyOnLoad(gameObject);
         if (_instance == null) _instance = this;
-
-        var typesWithAttribute = AttributeFinder.GetClassesWithAttribute<SingletonAttribute>();
-        Log.Debug("Found types with attribute: ", typesWithAttribute);
-        foreach (var type in typesWithAttribute)
-        {
-            if (!globals.ContainsKey(type)) globals.Add(type, FindObjectOfType(type));
-        }
-        Log.Debug("Current globals: ", globals);
+        DontDestroyOnLoad(_instance.gameObject);
     }
 
     public static T Get<T>() where T : UnityEngine.Object
@@ -64,21 +56,5 @@ public class Globals : MonoBehaviour
         var foundObj = factory();
         instance.globals.Add(type, foundObj);
         return foundObj;
-    }
-}
-
-public class SingletonAttribute : Attribute
-{
-
-}
-
-public static class AttributeFinder
-{
-    public static Type[] GetClassesWithAttribute<T>() where T : Attribute
-    {
-        var types = Assembly.GetExecutingAssembly().GetTypes();
-        var classesWithAttribute = types.Where(type => type.GetCustomAttribute<T>() != null).ToArray();
-
-        return classesWithAttribute;
     }
 }

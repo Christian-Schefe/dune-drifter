@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-[Singleton]
 public class SaveState : MonoBehaviour
 {
     public Dictionary<string, string> serializedState = new();

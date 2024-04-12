@@ -63,7 +63,11 @@
     <Compile Include="Assets\Scripts\SaveState.cs" />
     <Compile Include="Assets\Scripts\Globals.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
+    <Compile Include="Assets\Scripts\Car.cs" />
     <Compile Include="Assets\Scripts\Log.cs" />
+    <Compile Include="Assets\Scripts\CameraFollow.cs" />
+    <Compile Include="Assets\Scripts\MathU.cs" />
+    <Compile Include="Assets\Scripts\ComponentCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
