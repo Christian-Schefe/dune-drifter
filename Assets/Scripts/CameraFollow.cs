@@ -7,15 +7,19 @@ public class CameraFollow : MonoBehaviour
     public Vector3 offset;
 
     private Vector3 velocity;
+    private Vector3 curTarget;
 
     private void Update()
     {
         var car = Globals.Get<Car>();
 
-        var targetPos = car.transform.position + offset * MathU.Remap(0.0f, 30.0f, 1.0f, 1.5f, car.values.vel.magnitude, true);
+        curTarget = Vector3.SmoothDamp(curTarget, car.transform.position, ref velocity, 0.05f);
+        curTarget = car.transform.position;
+        var speedMul = MathU.Remap(0.0f, 30.0f, 1.0f, 1.5f, car.velocity.magnitude, true);
 
-        transform.position = Vector3.SmoothDamp(transform.position, targetPos, ref velocity, 0.1f);
+        var targetPos = curTarget + new Vector3(speedMul * offset.x, offset.y, speedMul * offset.z);
+
         transform.position = targetPos;
-        transform.LookAt(car.transform.position);
+        transform.LookAt(curTarget);
     }
 }

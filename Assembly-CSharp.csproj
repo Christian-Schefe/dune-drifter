@@ -60,14 +60,16 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.24f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\SaveState.cs" />
-    <Compile Include="Assets\Scripts\Globals.cs" />
+    <Compile Include="Assets\Scripts\Utils\Globals.cs" />
+    <Compile Include="Assets\Scripts\Utils\Log.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
     <Compile Include="Assets\Scripts\Car.cs" />
-    <Compile Include="Assets\Scripts\Log.cs" />
+    <Compile Include="Assets\Scripts\Wheel.cs" />
+    <Compile Include="Assets\Scripts\Utils\ComponentCache.cs" />
+    <Compile Include="Assets\Scripts\Utils\SaveState.cs" />
+    <Compile Include="Assets\Scripts\Utils\MathU.cs" />
     <Compile Include="Assets\Scripts\CameraFollow.cs" />
-    <Compile Include="Assets\Scripts\MathU.cs" />
-    <Compile Include="Assets\Scripts\ComponentCache.cs" />
+    <Compile Include="Assets\Scripts\Surface.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

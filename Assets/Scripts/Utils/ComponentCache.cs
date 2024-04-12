@@ -15,3 +15,17 @@ public class ComponentCache<T> where T : Component
         return cachedValue;
     }
 }
+
+public class ChildrenCache<T> where T : Component
+{
+    private T[] cachedValues;
+
+    public T[] Get(GameObject owner)
+    {
+        if (cachedValues == null)
+        {
+            cachedValues = owner.GetComponentsInChildren<T>();
+        }
+        return cachedValues;
+    }
+}
