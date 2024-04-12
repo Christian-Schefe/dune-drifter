@@ -1,32 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
-
-[System.Serializable]
-public struct CarParams
-{
-    public float breakStrength;
-    public float accelStrength;
-    public float torqueStrength;
-}
 
 public class Car : MonoBehaviour
 {
     public ComponentCache<Rigidbody> rb = new();
     public ChildrenCache<Wheel> wheels = new();
 
-    public float turnAngle;
-    public float throttle;
-    public float breaking;
-
-    public int wheelsOnGround;
-
-    public Vector3 velocity;
-    public Vector3 wheelAcceleration;
-
-    public CarParams settings;
+    public float motorTorque = 2000;
+    public float brakeTorque = 2000;
+    public float maxSpeed = 20;
+    public float steeringRange = 30;
+    public float steeringRangeAtMaxSpeed = 10;
+    public float centreOfGravityOffset = -1f;
 
     public Vector3 respawnPos;
     public Quaternion respawnRot;
@@ -35,45 +21,43 @@ public class Car : MonoBehaviour
     {
         respawnPos = transform.position;
         respawnRot = transform.rotation;
+
+        rb.Get(this).centerOfMass += Vector3.up * centreOfGravityOffset;
     }
 
     private void Update()
     {
-        UseInput();
-        var rigidbody = rb.Get(gameObject);
-        velocity = rigidbody.velocity;
+        float vInput = Input.GetAxis("Vertical");
+        float hInput = Input.GetAxis("Horizontal");
 
-        var acc = throttle * settings.accelStrength - breaking * settings.breakStrength;
-        var torq = settings.torqueStrength * MathU.Remap(0.0f, 1.0f, 0.0f, 1.0f, velocity.magnitude, true);
+        float forwardSpeed = Vector3.Dot(transform.forward, rb.Get(this).velocity);
 
-        var wheelsArr = wheels.Get(gameObject);
-        foreach (var wheel in wheelsArr)
+
+        float speedFactor = Mathf.InverseLerp(0, maxSpeed, forwardSpeed);
+        float currentMotorTorque = Mathf.Lerp(motorTorque, 0, speedFactor);
+        float currentSteerRange = Mathf.Lerp(steeringRange, steeringRangeAtMaxSpeed, speedFactor);
+        bool isAccelerating = Mathf.Sign(vInput) == Mathf.Sign(forwardSpeed);
+
+        foreach (var wheel in wheels.Get(this))
         {
-            wheel.SetTurnAngle(turnAngle);
+            if (wheel.steerable)
+            {
+                wheel.WheelCollider.steerAngle = hInput * currentSteerRange;
+            }
 
-            rigidbody.AddForce(wheel.Accel(velocity) * acc, ForceMode.Acceleration);
-            rigidbody.AddTorque(wheel.Torque * torq, ForceMode.Acceleration);
-        }
-
-        //rigidbody.velocity = velocity;
-
-        wheelsOnGround = wheels.Get(gameObject).Where(e => e.IsGrounded).Count();
-    }
-
-    private void UseInput()
-    {
-        var vertical = Input.GetAxisRaw("Vertical");
-        var horizontal = Input.GetAxisRaw("Horizontal");
-
-        turnAngle = horizontal;
-        throttle = Mathf.Max(0.0f, vertical);
-        breaking = Mathf.Max(0.0f, -vertical);
-
-        if (Input.GetKeyUp(KeyCode.R))
-        {
-            transform.SetPositionAndRotation(respawnPos, respawnRot);
-            rb.Get(gameObject).velocity = Vector3.zero;
-            rb.Get(gameObject).angularVelocity = Vector3.zero;
+            if (isAccelerating)
+            {
+                if (wheel.motorized)
+                {
+                    wheel.WheelCollider.motorTorque = vInput * currentMotorTorque;
+                }
+                wheel.WheelCollider.brakeTorque = 0;
+            }
+            else
+            {
+                wheel.WheelCollider.brakeTorque = Mathf.Abs(vInput) * brakeTorque;
+                wheel.WheelCollider.motorTorque = 0;
+            }
         }
     }
 }

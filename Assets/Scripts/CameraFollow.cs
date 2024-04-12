@@ -15,7 +15,7 @@ public class CameraFollow : MonoBehaviour
 
         curTarget = Vector3.SmoothDamp(curTarget, car.transform.position, ref velocity, 0.05f);
         curTarget = car.transform.position;
-        var speedMul = MathU.Remap(0.0f, 30.0f, 1.0f, 1.5f, car.velocity.magnitude, true);
+        var speedMul = 1.0f;//MathU.Remap(0.0f, 30.0f, 1.0f, 1.5f, car.velocity.magnitude, true);
 
         var targetPos = curTarget + new Vector3(speedMul * offset.x, offset.y, speedMul * offset.z);
 
