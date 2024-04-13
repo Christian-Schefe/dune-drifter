@@ -6,23 +6,18 @@ public class MatchParams
 {
     public int arenaSize = 5;
     public int handSize = 5;
-    public HexGridData<Piece> grid;
 }
 
 public class Match
 {
     public Arena arena;
     public Hand<PlayCard> hand;
+    public Run run;
 
-    public Match(Deck<PlayCard> deck, MatchParams matchParams)
+    public Match(Run run, Deck<PlayCard> deck, MatchParams matchParams)
     {
+        this.run = run;
         arena = new(matchParams.arenaSize);
         hand = new(deck, matchParams.handSize);
-    }
-
-    public void OnBeginMatch()
-    {
-        hand.OnBeginMatch();
-        arena.OnBeginMatch(this);
     }
 }

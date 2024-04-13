@@ -63,7 +63,9 @@
     <Compile Include="Assets\Scripts\Gameplay\Run.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Arena.cs" />
     <Compile Include="Assets\Scripts\Utils\Globals.cs" />
+    <Compile Include="Assets\Scripts\Utils\Queries.cs" />
     <Compile Include="Assets\Scripts\Utils\Log.cs" />
+    <Compile Include="Assets\Scripts\Utils\Signals.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
     <Compile Include="Assets\Scripts\Utils\ComponentCache.cs" />
     <Compile Include="Assets\Scripts\Utils\SaveState.cs" />

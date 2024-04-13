@@ -11,11 +11,6 @@ public class Deck<T>
     public Deck(List<T> cards)
     {
         this.cards = cards;
-        remainingCards = new();
-    }
-
-    public void Shuffle()
-    {
         remainingCards = new(cards.Shuffled());
     }
 
@@ -37,11 +32,6 @@ public class Hand<T>
         this.deck = deck;
         this.handSize = handSize;
         drawnCards = new();
-    }
-    public void OnBeginMatch()
-    {
-        deck.Shuffle();
-        drawnCards.Clear();
         DrawCards();
     }
 

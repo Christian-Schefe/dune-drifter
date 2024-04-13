@@ -6,11 +6,16 @@ using UnityEngine;
 public class HexGridData<T>
 {
     public Dictionary<Vector2Int, T> data;
+    public Dictionary<Vector2Int, List<Vector2Int>> neighbours;
 
     public HexGridData()
     {
         data = new();
+        neighbours = new();
+        foreach (var key in data.Keys) neighbours.Add(key, HexGrid.Neighbours(key).Where(Inside).ToList());
     }
+
+    public bool Inside(Vector2Int vec) => data.ContainsKey(vec);
 
     public void SetHexagonShape(int size)
     {
@@ -76,6 +81,18 @@ public class HexGrid
     {
         squareToWorld = Matrix4x4.TRS(offset, rotation, scale) * Matrix4x4.Rotate(Quaternion.Euler(90, 0, 0));
         worldToSquare = squareToWorld.inverse;
+    }
+
+    public static List<Vector2Int> Neighbours(Vector2Int vec)
+    {
+        return new List<Vector2Int>() {
+            vec + new Vector2Int(0, 1),
+            vec + new Vector2Int(1, 0),
+            vec + new Vector2Int(1, -1),
+            vec + new Vector2Int(0, -1),
+            vec + new Vector2Int(-1, 0),
+            vec + new Vector2Int(-1, 1)
+        };
     }
 
     public static Vector2Int Forward => new(0, 1);

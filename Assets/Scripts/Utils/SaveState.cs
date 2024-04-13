@@ -58,7 +58,10 @@ public class SaveState : MonoBehaviour
 
     private void Load()
     {
-        if (!hasLoaded) serializedState = JsonManager.CreateOrLoad(fileName, SaveStateData.Default()).ToDict();
+        if (!hasLoaded)
+        {
+            serializedState = JsonManager.CreateOrLoad(fileName, SaveStateData.Default()).ToDict();
+        }
     }
 
     private void Save()
