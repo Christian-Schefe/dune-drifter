@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Surface : MonoBehaviour
+public class PlayCard
 {
-    public float friction = 1.0f;
+
 }

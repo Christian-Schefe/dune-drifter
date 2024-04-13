@@ -7,44 +7,35 @@ public class ComponentCache<T> where T : Component
 {
     private T cachedValue;
 
+    private bool ShouldGet => cachedValue == null;
+
     public T Get(GameObject owner)
     {
-        if (cachedValue == null)
+        if (ShouldGet && !owner.TryGetComponent(out cachedValue))
         {
-            cachedValue = owner.GetComponent<T>();
+            Log.Debug($"No component of type {typeof(T)} found!");
         }
         return cachedValue;
     }
 
-    public T Get(Component owner)
-    {
-        if (cachedValue == null)
-        {
-            cachedValue = owner.GetComponent<T>();
-        }
-        return cachedValue;
-    }
+    public T Get(Component owner) { return Get(owner.gameObject); }
 }
 
 public class ChildrenCache<T> where T : Component
 {
     private T[] cachedValues;
 
+    private bool ShouldGet => cachedValues == null || cachedValues.Length == 0 || cachedValues.Any(e => e == null);
+
     public T[] Get(GameObject owner)
     {
-        if (cachedValues == null || cachedValues.Any(e => e == null))
+        if (ShouldGet)
         {
             cachedValues = owner.GetComponentsInChildren<T>();
+            if (ShouldGet) Log.Debug($"No components of type {typeof(T)} found!");
         }
         return cachedValues;
     }
 
-    public T[] Get(Component owner)
-    {
-        if (cachedValues == null || cachedValues.Any(e => e == null))
-        {
-            cachedValues = owner.GetComponentsInChildren<T>();
-        }
-        return cachedValues;
-    }
+    public T[] Get(Component owner) { return Get(owner.gameObject); }
 }

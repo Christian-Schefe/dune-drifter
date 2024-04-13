@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Checker
+  m_Name: Desert
   m_Shader: {fileID: -6465566751694194690, guid: d8bbf6cd447576849b1ffe77c948f4c6,
     type: 3}
   m_Parent: {fileID: 0}
@@ -51,8 +51,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Frequency: 0.25
+    - _Bump: 6.57
+    - _Frequency: 10.6
     - _QueueControl: 0
     - _QueueOffset: 0
-    m_Colors: []
+    m_Colors:
+    - _Color: {r: 0.8113208, g: 0.687676, b: 0.4094874, a: 0}
   m_BuildTextureStacks: []
