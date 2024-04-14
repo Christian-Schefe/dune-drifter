@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-
-public class GetMoveOptionsQuery : Query<Vector2Int, (List<Vector2Int>, List<Vector2Int>)> { }
-
 public interface IQuery { }
 
 public static class Queries
 {
     private static readonly QueryHub hub = new();
 
-    public static T Get<T>() where T : IQuery, new()
-    {
-        return hub.Get<T>();
-    }
+    public static T Get<T>() where T : IQuery, new() => hub.Get<T>();
+    public static IQuery Get(Type type) => hub.Get(type);
 }
 
 public class QueryHub
@@ -25,10 +20,13 @@ public class QueryHub
     public T Get<T>() where T : IQuery, new()
     {
         Type queryType = typeof(T);
-
         if (!queries.ContainsKey(queryType)) queries.Add(queryType, new T());
-
         return (T)queries[queryType];
+    }
+    public IQuery Get(Type type)
+    {
+        if (!queries.ContainsKey(type)) queries.Add(type, Activator.CreateInstance(type) as IQuery);
+        return queries[type];
     }
 }
 

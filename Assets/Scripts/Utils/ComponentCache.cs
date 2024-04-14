@@ -9,12 +9,23 @@ public class ComponentCache<T> where T : Component
 
     private bool ShouldGet => cachedValue == null;
 
-    public T Get(GameObject owner)
+    public T Get(GameObject owner, bool includeChildren = true)
     {
-        if (ShouldGet && !owner.TryGetComponent(out cachedValue))
+        if (!ShouldGet) return cachedValue;
+
+        if (!includeChildren)
         {
-            Log.Debug($"No component of type {typeof(T)} found!");
+            if (!owner.TryGetComponent(out cachedValue))
+            {
+                Log.Debug($"No component of type {typeof(T)} found!");
+            }
         }
+        else
+        {
+            cachedValue = owner.GetComponentInChildren<T>();
+            if (ShouldGet) Log.Debug($"No components of type {typeof(T)} found!");
+        }
+
         return cachedValue;
     }
 

@@ -45,6 +45,14 @@ public class Hand<T>
         }
     }
 
+    public T PlayCard(int i)
+    {
+        T card = drawnCards[i];
+        drawnCards.RemoveAt(i);
+        DrawCards();
+        return card;
+    }
+
     public List<T> PlayCards(List<int> cardIndices)
     {
         cardIndices.Sort((a, b) => b.CompareTo(a));

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class HexGridData<T>
 {
@@ -66,74 +67,73 @@ public class HexGridData<T>
     }
 }
 
-
 public class HexGrid
 {
     public const float SQRT_3 = 1.73205080757f;
 
-    public static Matrix4x4 hexToSquare = new(new(1.5f, SQRT_3 * 0.5f, 0, 0), new(0, SQRT_3, 0, 0), Vector4.zero, Vector4.zero);
-    public static Matrix4x4 squareToHex = hexToSquare.inverse;
+    public static Vector2 IHat = new(1.5f, SQRT_3 * 0.5f);
+    public static Vector2 JHat = new(0f, SQRT_3);
 
-    public Matrix4x4 squareToWorld;
-    public Matrix4x4 worldToSquare;
+    public static Matrix2x2 hexToLocal = Matrix2x2.Cols(IHat, JHat);
+    public static Matrix2x2 localToHex = hexToLocal.Inverse;
 
-    public HexGrid(Vector3 scale, Vector3 offset, Quaternion rotation)
+    public RawTransform transform;
+
+    public HexGrid(RawTransform transform)
     {
-        squareToWorld = Matrix4x4.TRS(offset, rotation, scale) * Matrix4x4.Rotate(Quaternion.Euler(90, 0, 0));
-        worldToSquare = squareToWorld.inverse;
+        this.transform = transform;
     }
 
     public static List<Vector2Int> Neighbours(Vector2Int vec)
     {
-        return new List<Vector2Int>() {
-            vec + new Vector2Int(0, 1),
-            vec + new Vector2Int(1, 0),
-            vec + new Vector2Int(1, -1),
-            vec + new Vector2Int(0, -1),
-            vec + new Vector2Int(-1, 0),
-            vec + new Vector2Int(-1, 1)
-        };
+        return Directions.Select(e => e + vec).ToList();
     }
 
+    public static Vector2Int[] Directions = new Vector2Int[] { Forward, UpRight, DownRight, Backwards, DownLeft, UpLeft };
+
     public static Vector2Int Forward => new(0, 1);
+    public static Vector2Int Backwards => new(0, -1);
+
+    public static Vector2Int UpRight => new(1, 0);
+    public static Vector2Int DownLeft => new(-1, 0);
+
+    public static Vector2Int UpLeft => new(1, -1);
+    public static Vector2Int DownRight => new(-1, 1);
 
     public Vector3 HexToWorld(Vector2 vec)
     {
-        return SquareToWorld(HexToSquare(vec));
+        return transform.LocalToWorld(HexToLocal(vec));
     }
     public Vector2 WorldToHex(Vector3 vec)
     {
-        return SquareToHex(WorldToSquare(vec));
+        return LocalToHex(transform.WorldToLocal(vec));
     }
 
     public Vector2Int WorldToHexRound(Vector3 vec)
     {
-        return SquareToHexRound(WorldToSquare(vec));
+        return LocalToHexRound(transform.WorldToLocal(vec));
     }
 
-    public Vector3 SquareToWorld(Vector2 vec)
+    public Vector3 WorldToWorldRound(Vector3 vec)
     {
-        return (Vector3)(squareToWorld * (Vector4)vec);
-    }
-    public Vector2 WorldToSquare(Vector3 vec)
-    {
-        return (Vector2)(worldToSquare * (Vector4)vec);
+        return HexToWorld(WorldToHexRound(vec));
     }
 
-
-    public static Vector2 HexToSquare(Vector2 vec)
+    public static Vector3 HexToLocal(Vector2 hex)
     {
-        return (Vector2)(hexToSquare * (Vector4)vec);
+        var local = hexToLocal * hex;
+        return new(local.x, 0, local.y);
     }
 
-    public static Vector2 SquareToHex(Vector2 vec)
+    public static Vector2 LocalToHex(Vector3 local)
     {
-        return (Vector2)(squareToHex * (Vector4)vec);
+        var hex = localToHex * new Vector2(local.x, local.z);
+        return hex;
     }
 
-    public static Vector2Int SquareToHexRound(Vector2 vec)
+    public static Vector2Int LocalToHexRound(Vector3 vec)
     {
-        return RoundHex(SquareToHex(vec));
+        return RoundHex(LocalToHex(vec));
     }
 
     public static Vector2Int RoundHex(Vector2 vec)
@@ -147,8 +147,31 @@ public class HexGrid
             return round + new Vector2Int(0, Mathf.RoundToInt(fract.y + 0.5f * fract.x));
     }
 
+    public Vector2 WorldRayToHex(Ray ray)
+    {
+        var worldIntersect = MathU.PlaneRayIntersect(ray, transform.Position, transform.Up);
+        return WorldToHex(worldIntersect);
+    }
+
+    public Vector2Int WorldRayToHexRound(Ray ray)
+    {
+        var worldIntersect = MathU.PlaneRayIntersect(ray, transform.Position, transform.Up);
+        return WorldToHexRound(worldIntersect);
+    }
+
+    public Vector3 WorldRayToWorldRound(Ray ray)
+    {
+        var worldIntersect = MathU.PlaneRayIntersect(ray, transform.Position, transform.Up);
+        return WorldToWorldRound(worldIntersect);
+    }
+
     public static int ManhattenDistance(Vector2Int a, Vector2Int b)
     {
         return (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.x + a.y - b.x - b.y) + Mathf.Abs(a.y - b.y)) / 2;
+    }
+
+    public static float ManhattenDistance(Vector2 a, Vector2 b)
+    {
+        return (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.x + a.y - b.x - b.y) + Mathf.Abs(a.y - b.y)) * 0.5f;
     }
 }

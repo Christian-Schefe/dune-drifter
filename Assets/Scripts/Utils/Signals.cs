@@ -3,25 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-
-public class MatchStartEvent : Signal<Match> { }
-public class MatchEndEvent : Signal<Match> { }
-
-public class PieceMovedResponse : Signal<Vector2Int, Piece> { }
-public class PieceAttackedResponse : Signal<Vector2Int, Piece> { }
-public class PieceLostShieldResponse : Signal<Vector2Int, Piece> { }
-public class PieceSpawnedResponse : Signal<Vector2Int, Piece> { }
-
 public interface ISignal { }
 
 public static class Signals
 {
     private static readonly SignalHub hub = new();
 
-    public static T Get<T>() where T : ISignal, new()
-    {
-        return hub.Get<T>();
-    }
+    public static T Get<T>() where T : ISignal, new() => hub.Get<T>();
+    public static ISignal Get(Type type) => hub.Get(type);
 }
 
 public class SignalHub
@@ -31,10 +20,13 @@ public class SignalHub
     public T Get<T>() where T : ISignal, new()
     {
         Type signalType = typeof(T);
-
         if (!signals.ContainsKey(signalType)) signals.Add(signalType, new T());
-
         return (T)signals[signalType];
+    }
+    public ISignal Get(Type type)
+    {
+        if (!signals.ContainsKey(type)) signals.Add(type, Activator.CreateInstance(type) as ISignal);
+        return signals[type];
     }
 }
 

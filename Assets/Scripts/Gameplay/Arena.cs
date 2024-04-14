@@ -61,10 +61,11 @@ public class Arena
         return moveTargets.Contains(to);
     }
 
-    public void SpawnPiece(Vector2Int at, Piece piece)
+    public void SpawnPiece(Vector2Int at, PieceType type)
     {
+        Piece piece = new(grid, at, true, type, PieceBuff.None);
         grid.data[at] = piece;
-        Signals.Get<PieceSpawnedResponse>().Dispatch(at, piece);
+        Signals.Get<PieceSignal.Spawned>().Dispatch(at, piece);
     }
 
     public void AttackPiece(Vector2Int from, Vector2Int to)
@@ -74,14 +75,14 @@ public class Arena
         if (targetPiece.buffs.HasFlag(PieceBuff.Shield))
         {
             targetPiece.buffs &= ~PieceBuff.Shield;
-            Signals.Get<PieceLostShieldResponse>().Dispatch(to, targetPiece);
+            Signals.Get<PieceSignal.LostShield>().Dispatch(to, targetPiece);
         }
         else
         {
             grid.data[to] = null;
         }
 
-        Signals.Get<PieceAttackedResponse>().Dispatch(to, piece);
+        Signals.Get<PieceSignal.Attacked>().Dispatch(to, piece);
     }
 
     public void MovePiece(Vector2Int from, Vector2Int to)
@@ -91,63 +92,6 @@ public class Arena
         grid.data[from] = null;
         piece.SetPosition(to);
 
-        Signals.Get<PieceMovedResponse>().Dispatch(from, piece);
+        Signals.Get<PieceSignal.Moved>().Dispatch(from, piece);
     }
-}
-
-public class Piece
-{
-    public HexGridData<Piece> grid;
-    public Vector2Int pos;
-    public PieceType type;
-    public bool team;
-    public PieceBuff buffs;
-
-    public Piece(HexGridData<Piece> grid, Vector2Int pos, bool team, PieceType type, PieceBuff buffs)
-    {
-        this.grid = grid;
-        this.pos = pos;
-        this.type = type;
-        this.team = team;
-        this.buffs = buffs;
-    }
-
-    public void SetPosition(Vector2Int pos)
-    {
-        this.pos = pos;
-    }
-
-    public List<Vector2Int> GetAttackTargets()
-    {
-        var list = type switch
-        {
-            PieceType.Protector => new(),
-            _ => GetMoveTargets(),
-        };
-
-        return list;
-    }
-
-    public List<Vector2Int> GetMoveTargets()
-    {
-        var list = type switch
-        {
-            PieceType.Sphere => grid.neighbours[pos],
-            PieceType.Protector => new() { pos + HexGrid.Forward },
-            _ => new(),
-        };
-
-        return list;
-    }
-}
-
-public enum PieceType
-{
-    Sphere, Protector
-}
-
-[System.Flags]
-public enum PieceBuff
-{
-    None = 0, Taunt = 1, Shield = 2, Distract = 4,
 }

@@ -64,18 +64,30 @@
     <Compile Include="Assets\Scripts\Gameplay\Arena.cs" />
     <Compile Include="Assets\Scripts\Utils\Globals.cs" />
     <Compile Include="Assets\Scripts\Utils\Queries.cs" />
+    <Compile Include="Assets\Scripts\Utils\Commands.cs" />
     <Compile Include="Assets\Scripts\Utils\Log.cs" />
+    <Compile Include="Assets\Scripts\Utils\Matrix.cs" />
+    <Compile Include="Assets\Scripts\Utils\Tweens.cs" />
     <Compile Include="Assets\Scripts\Utils\Signals.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
+    <Compile Include="Assets\Scripts\Utils\RawTransform.cs" />
+    <Compile Include="Assets\Scripts\Frontend\RunManager.cs" />
     <Compile Include="Assets\Scripts\Utils\ComponentCache.cs" />
     <Compile Include="Assets\Scripts\Utils\SaveState.cs" />
+    <Compile Include="Assets\Scripts\Frontend\Shield.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\Events.cs" />
+    <Compile Include="Assets\Scripts\Frontend\MatchManager.cs" />
+    <Compile Include="Assets\Scripts\Utils\HexGrid.cs" />
+    <Compile Include="Assets\Scripts\Frontend\PiecePrefabMapping.cs" />
+    <Compile Include="Assets\Scripts\Frontend\PieceManager.cs" />
     <Compile Include="Assets\Scripts\Utils\RandomU.cs" />
     <Compile Include="Assets\Scripts\Utils\MathU.cs" />
+    <Compile Include="Assets\Scripts\Frontend\PieceInstance.cs" />
     <Compile Include="Assets\Scripts\Gameplay\PlayCard.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\Piece.cs" />
     <Compile Include="Assets\Scripts\Gameplay\RuleCard.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Match.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Deck.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\HexGrid.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
