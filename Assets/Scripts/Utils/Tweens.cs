@@ -3,114 +3,290 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Tween
+public class Tweenable<T, Q> where T : Tweenable<T, Q>
 {
-    private readonly Easing easing;
-    private readonly float duration;
+    public Q value;
+    public Tweenable(Q value) => this.value = value;
+    public virtual Q LerpUnclamped(Q from, Q to, float t) { throw new NotImplementedException(); }
+    public virtual Q Lerp(Q from, Q to, float t) => LerpUnclamped(from, to, Mathf.Clamp01(t));
+    public static implicit operator Tweenable<T, Q>(Q val) => new(val);
+    public static implicit operator Q(Tweenable<T, Q> val) => val.value;
+}
+public class Vec2Wrap : Tweenable<Vec2Wrap, Vector2>
+{
+    public Vec2Wrap(Vector2 value) : base(value) { }
+    public override Vector2 LerpUnclamped(Vector2 from, Vector2 to, float t) => Vector2.LerpUnclamped(from, to, t);
+}
+public class Vec3Wrap : Tweenable<Vec3Wrap, Vector3>
+{
+    public Vec3Wrap(Vector3 value) : base(value) { }
+    public override Vector3 LerpUnclamped(Vector3 from, Vector3 to, float t) => Vector3.LerpUnclamped(from, to, t);
+}
+public class QuatWrap : Tweenable<QuatWrap, Quaternion>
+{
+    public QuatWrap(Quaternion value) : base(value) { }
+    public override Quaternion LerpUnclamped(Quaternion from, Quaternion to, float t) => Quaternion.SlerpUnclamped(from, to, t);
+}
+
+public struct TweenParams
+{
+    public float delay;
+    public float duration;
+    public bool loop;
+    public bool pingPong;
+    public int? repeatCount;
+    public float repeatWait;
+    public bool reverse;
+    public Ease easing;
+
+    public static TweenParams Default => new()
+    {
+        delay = 0,
+        duration = 1,
+        loop = false,
+        pingPong = false,
+        repeatCount = null,
+        repeatWait = 0,
+        reverse = false,
+        easing = Ease.Linear
+    };
+}
+
+public struct TweenCycle
+{
+    public float initialWait;
+    public float duration;
+    public bool reversing;
+
+    public readonly IEnumerator GetCoroutine(Action<float> setter, Ease easing)
+    {
+        float currentTime = Time.time;
+        float startTime = currentTime + initialWait;
+        float endTime = startTime + duration;
+        float inverseDuration = 1 / duration;
+        while (true)
+        {
+            currentTime = Time.time;
+            if (currentTime < startTime)
+            {
+                yield return null;
+                continue;
+            }
+
+            if (currentTime >= endTime)
+            {
+                setter(reversing ? 0 : 1);
+                break;
+            }
+
+            float alpha = currentTime * inverseDuration;
+            setter(easing[reversing ? 1 - alpha : alpha]);
+
+            yield return null;
+        }
+    }
+}
+
+public struct TweenCallbacks
+{
+    public Action onStart;
+    public Action onComplete;
+    public Action onCancel;
+    public Action onFinally;
+
+    public static TweenCallbacks Default => new()
+    {
+        onStart = null,
+        onComplete = null,
+        onCancel = null,
+        onFinally = null
+    };
+}
+
+public static class Tweens
+{
+    public static Tween Any<T, Q>(Action<Q> setter, Tweenable<T, Q> from, Tweenable<T, Q> to, float duration, Ease easing) where T : Tweenable<T, Q>
+    {
+        void Setter(float t) => setter(from.LerpUnclamped(from, to, t));
+        return new Tween(Setter).Duration(duration).Easing(easing);
+    }
+
+    public static Tween Pos(Transform target, Vector3 from, Vector3 to, float duration, Ease easing)
+    {
+        return Any<Vec3Wrap, Vector3>(v => target.position = v, from, to, duration, easing);
+    }
+
+    public static Tween Quat(Transform target, Quaternion from, Quaternion to, float duration, Ease easing)
+    {
+        return Any<QuatWrap, Quaternion>(q => target.rotation = q, from, to, duration, easing);
+    }
+
+    public static Tween Scale(Transform target, Vector3 from, Vector3 to, float duration, Ease easing)
+    {
+        return Any<Vec3Wrap, Vector3>(v => target.localScale = v, from, to, duration, easing);
+    }
+}
+
+public struct Tween
+{
+    private TweenParams parameters;
+    private TweenCallbacks callbacks;
+
     private readonly Action<float> setter;
 
-    private Action onFinally;
-    private Action onComplete;
-    private Action onCancel;
+    public Tween(Action<float> setter) : this(setter, TweenParams.Default, TweenCallbacks.Default) { }
 
-    public float alpha;
-
-    public static Tween Vec3(Action<Vector3> setter, Vector3 from, Vector3 to, float duration, Easing easing)
+    public Tween(Action<float> setter, TweenParams parameters, TweenCallbacks callbacks)
     {
-        void Setter(float t) => setter(Vector3.LerpUnclamped(from, to, t));
-        return new Tween(Setter, duration, easing);
-    }
-
-    public static Tween Pos(Transform target, Vector3 from, Vector3 to, float duration, Easing easing)
-    {
-        void Setter(float t) => target.position = Vector3.LerpUnclamped(from, to, t);
-        return new Tween(Setter, duration, easing);
-    }
-
-    public Tween(Action<float> setter, float duration, Easing easing)
-    {
-        this.easing = easing;
         this.setter = setter;
-        this.duration = duration;
-        alpha = 0f;
+        this.parameters = parameters;
+        this.callbacks = callbacks;
     }
 
-    public Tween OnFinally(Action onFinally)
+    public Tween Delay(float delay)
     {
-        this.onFinally = onFinally;
+        parameters.delay = delay;
         return this;
     }
 
-    public Tween OnComplete(Action onComplete)
+    public Tween Duration(float duration)
     {
-        this.onComplete = onComplete;
+        parameters.duration = duration;
         return this;
     }
 
-    public Tween OnCancel(Action onCancel)
+    public Tween Loop(bool loop)
     {
-        this.onCancel = onCancel;
+        parameters.loop = loop;
+        parameters.pingPong &= !loop;
         return this;
     }
 
-    public TweenRoutine Start(MonoBehaviour owner, TweenRoutine prev = null)
+    public Tween Loop(int? count)
+    {
+        return RepeatCount(count).Loop(count.HasValue);
+    }
+
+    public Tween PingPong(bool pingPong)
+    {
+        parameters.pingPong = pingPong;
+        parameters.loop &= !pingPong;
+        return this;
+    }
+
+    public Tween PingPong(int? count)
+    {
+        return RepeatCount(count).PingPong(count.HasValue);
+    }
+
+    public Tween RepeatCount(int? count)
+    {
+        if (count is int c && c < 1)
+        {
+            throw new ArgumentException("Loop count must be greater than 0");
+        }
+        parameters.repeatCount = count;
+        return this;
+    }
+
+    public Tween RepeatWait(float wait)
+    {
+        parameters.repeatWait = wait;
+        return this;
+    }
+
+    public Tween Reverse(bool reverse)
+    {
+        parameters.reverse = reverse;
+        return this;
+    }
+
+    public Tween Easing(Ease easing)
+    {
+        parameters.easing = easing;
+        return this;
+    }
+
+    public Tween OnStart(Action action)
+    {
+        callbacks.onStart = action;
+        return this;
+    }
+
+    public Tween OnComplete(Action action)
+    {
+        callbacks.onComplete = action;
+        return this;
+    }
+
+    public Tween OnCancel(Action action)
+    {
+        callbacks.onCancel = action;
+        return this;
+    }
+
+    public Tween OnFinally(Action action)
+    {
+        callbacks.onFinally = action;
+        return this;
+    }
+
+    public readonly TweenRoutine Start(MonoBehaviour owner, TweenRoutine prev = null)
     {
         if (prev != null) return prev.Replace(this);
         else return new TweenRoutine(owner.StartCoroutine(Coroutine()), this, owner);
     }
 
-    public Tween Chain(Tween second, float durationGap = 0f)
+    private readonly TweenCycle GetCycle(int index)
     {
-        float newDuration = duration + second.duration + durationGap;
-        float t1Range = duration / newDuration;
-        float t2Range = second.duration / newDuration;
-        float t2Offset = newDuration - second.duration;
-
-        void Setter(float t)
+        bool flipReverse = parameters.pingPong && index % 2 == 1;
+        return new TweenCycle
         {
-            float t1 = t / t1Range;
-            if (t1 <= 1) setter(easing[t1]);
-            else
+            initialWait = index == 0 ? 0 : parameters.repeatWait,
+            duration = parameters.duration,
+            reversing = flipReverse ^ parameters.reverse,
+        };
+    }
+
+    private readonly IEnumerator<TweenCycle> GetCycles()
+    {
+        if (!parameters.loop && !parameters.pingPong)
+        {
+            yield return new TweenCycle
             {
-                float t2 = (t - t2Offset) / t2Range;
-                second.setter(second.easing[t2]);
-            }
+                initialWait = parameters.delay,
+                duration = parameters.duration,
+                reversing = parameters.reverse
+            };
+            yield break;
         }
-        return new(Setter, newDuration, Easing.Linear);
-    }
 
-    public Tween Reversed()
-    {
-        return new(t => setter(1f - t), duration, easing);
-    }
-
-    public IEnumerator Coroutine()
-    {
-        float startTime = Time.time;
-        float inverseDuration = 1f / duration;
-
-        while (true)
+        int index = 0;
+        while (!(parameters.repeatCount is int count && index >= count))
         {
-            float timeDiff = Time.time - startTime;
-            alpha = timeDiff * inverseDuration;
-            if (alpha >= 1f)
-            {
-                alpha = 1f;
-                setter(alpha);
-                onComplete?.Invoke();
-                onFinally?.Invoke();
-                break;
-            }
-
-            setter(easing[alpha]);
-            yield return null;
+            yield return GetCycle(index);
+            index++;
         }
     }
 
-    public void Cancel()
+    public readonly IEnumerator Coroutine()
     {
-        onCancel?.Invoke();
-        onFinally?.Invoke();
+        var cycles = GetCycles();
+        var startTime = Time.time + parameters.delay;
+        while (Time.time < startTime) yield return null;
+        callbacks.onStart?.Invoke();
+        while (cycles.MoveNext())
+        {
+            yield return cycles.Current.GetCoroutine(setter, parameters.easing);
+        }
+        callbacks.onComplete?.Invoke();
+        callbacks.onFinally?.Invoke();
+    }
+
+    public readonly void OnCancel()
+    {
+        callbacks.onCancel?.Invoke();
+        callbacks.onFinally?.Invoke();
     }
 }
 
@@ -127,12 +303,10 @@ public class TweenRoutine
         this.owner = owner;
     }
 
-    public bool IsFinished => tween.alpha >= 1f;
-
     public void Cancel()
     {
         owner.StopCoroutine(coroutine);
-        tween.Cancel();
+        tween.OnCancel();
     }
 
     public TweenRoutine Replace(Tween newTween)
@@ -142,22 +316,42 @@ public class TweenRoutine
     }
 }
 
-public sealed class Easing
+public sealed class Ease
 {
     private readonly Func<float, float> func;
 
-    private Easing(Func<float, float> easing)
+    private Ease(Func<float, float> easing)
     {
         func = easing;
     }
 
-    public readonly static Easing Linear = new(t => t);
-    public readonly static Easing QuadIn = new(t => t * t);
-    public readonly static Easing QuadOut = new(t => 1f - (1f - t) * (1f - t));
-    public readonly static Easing Quad = new(t => t < 0.5f ? 2 * t * t : 1f - 2 * (1 - t) * (1 - t));
-    public readonly static Easing CubicIn = new(t => t * t * t);
-    public readonly static Easing CubicOut = new(t => 1f - (1 - t) * (1 - t) * (1 - t));
-    public readonly static Easing Cubic = new(t => t < 0.5f ? 4 * t * t * t : 1f - 4 * (1 - t) * (1 - t) * (1 - t));
+    public readonly static Ease Linear = new(t => t);
+    public readonly static Ease QuadIn = In(2);
+    public readonly static Ease QuadOut = Out(2);
+    public readonly static Ease QuadInOut = InOut(2);
+    public readonly static Ease CubicIn = In(3);
+    public readonly static Ease CubicOut = Out(3);
+    public readonly static Ease CubicInOut = InOut(3);
+    public readonly static Ease QuartIn = In(4);
+    public readonly static Ease QuartOut = Out(4);
+    public readonly static Ease QuartInOut = InOut(4);
+    public readonly static Ease QuintIn = In(5);
+    public readonly static Ease QuintOut = Out(5);
+    public readonly static Ease QuintInOut = InOut(5);
+
 
     public float this[float t] => func(t);
+
+    public static Ease InOut(float power)
+    {
+        return new(t => t < 0.5f ? 0.5f * Mathf.Pow(2 * t, power) : 1 - 0.5f * Mathf.Pow(2 - 2 * t, power));
+    }
+    public static Ease In(float power)
+    {
+        return new(t => Mathf.Pow(t, power));
+    }
+    public static Ease Out(float power)
+    {
+        return new(t => 1 - Mathf.Pow(1 - t, power));
+    }
 }
