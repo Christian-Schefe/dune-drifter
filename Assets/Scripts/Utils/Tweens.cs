@@ -134,6 +134,8 @@ public struct Tween
 
     private readonly Action<float> setter;
 
+    public bool Terminated { get; private set; }
+
     public Tween(Action<float> setter) : this(setter, TweenParams.Default, TweenCallbacks.Default) { }
 
     public Tween(Action<float> setter, TweenParams parameters, TweenCallbacks callbacks)
@@ -141,6 +143,7 @@ public struct Tween
         this.setter = setter;
         this.parameters = parameters;
         this.callbacks = callbacks;
+        Terminated = false;
     }
 
     public Tween Delay(float delay)
@@ -207,31 +210,35 @@ public struct Tween
         return this;
     }
 
-    public Tween OnStart(Action action)
+    public Tween OnStart(Action action, bool replace = false)
     {
-        callbacks.onStart = action;
+        if (replace) callbacks.onStart = action;
+        else callbacks.onStart += action;
         return this;
     }
 
-    public Tween OnComplete(Action action)
+    public Tween OnComplete(Action action, bool replace = false)
     {
-        callbacks.onComplete = action;
+        if (replace) callbacks.onComplete = action;
+        else callbacks.onComplete += action;
         return this;
     }
 
-    public Tween OnCancel(Action action)
+    public Tween OnCancel(Action action, bool replace = false)
     {
-        callbacks.onCancel = action;
+        if (replace) callbacks.onCancel = action;
+        else callbacks.onCancel += action;
         return this;
     }
 
-    public Tween OnFinally(Action action)
+    public Tween OnFinally(Action action, bool replace = false)
     {
-        callbacks.onFinally = action;
+        if (replace) callbacks.onFinally = action;
+        else callbacks.onFinally += action;
         return this;
     }
 
-    public readonly TweenRoutine Start(MonoBehaviour owner, TweenRoutine prev = null)
+    public TweenRoutine Start(MonoBehaviour owner, TweenRoutine prev = null)
     {
         if (prev != null) return prev.Replace(this);
         else return new TweenRoutine(owner.StartCoroutine(Coroutine()), this, owner);
@@ -269,7 +276,7 @@ public struct Tween
         }
     }
 
-    public readonly IEnumerator Coroutine()
+    public IEnumerator Coroutine()
     {
         var cycles = GetCycles();
         var startTime = Time.time + parameters.delay;
@@ -281,12 +288,17 @@ public struct Tween
         }
         callbacks.onComplete?.Invoke();
         callbacks.onFinally?.Invoke();
+        Terminated = true;
     }
 
-    public readonly void OnCancel()
+    public void OnCancel()
     {
-        callbacks.onCancel?.Invoke();
-        callbacks.onFinally?.Invoke();
+        if (!Terminated)
+        {
+            Terminated = true;
+            callbacks.onCancel?.Invoke();
+            callbacks.onFinally?.Invoke();
+        }
     }
 }
 
@@ -296,11 +308,16 @@ public class TweenRoutine
     public Tween tween;
     public MonoBehaviour owner;
 
+    public Queue<Tween> chain = new();
+
     public TweenRoutine(Coroutine coroutine, Tween tween, MonoBehaviour owner)
     {
+        tween.OnComplete(OnComplete);
+
         this.coroutine = coroutine;
         this.tween = tween;
         this.owner = owner;
+
     }
 
     public void Cancel()
@@ -313,6 +330,23 @@ public class TweenRoutine
     {
         Cancel();
         return newTween.Start(owner);
+    }
+
+    private void OnComplete()
+    {
+        if (chain.Count > 0)
+        {
+            var newRuntime = chain.Dequeue().Start(owner, this);
+            coroutine = newRuntime.coroutine;
+            tween = newRuntime.tween;
+            owner = newRuntime.owner;
+        }
+    }
+
+    public TweenRoutine Chain(Tween nextTween)
+    {
+        chain.Enqueue(nextTween);
+        return this;
     }
 }
 
