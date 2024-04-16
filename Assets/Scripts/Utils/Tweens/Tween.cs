@@ -37,6 +37,7 @@ public struct TweenCycle
     public readonly IEnumerator GetCoroutine(Action<float> setter, Easing easing)
     {
         var easingFunc = Ease.Get(easing);
+
         float currentTime = Time.time;
         float startTime = currentTime + initialWait;
         float endTime = startTime + duration;
@@ -82,8 +83,8 @@ public struct TweenCallbacks
 
 public class Tween<T> : Tween
 {
-    private ITweenable<T> from;
-    private ITweenable<T> to;
+    private Tweenable<T> from;
+    private Tweenable<T> to;
     private Action<T> valSetter;
 
     public Tween() : base()
@@ -94,19 +95,19 @@ public class Tween<T> : Tween
 
     public Tween<T> From(T from)
     {
-        this.from = (ITweenable<T>)from;
+        this.from = (Tweenable<T>)from;
         return this;
     }
 
     public Tween<T> To(T to)
     {
-        this.to = (ITweenable<T>)to;
+        this.to = (Tweenable<T>)to;
         return this;
     }
 
     public Tween<T> By(T by)
     {
-        to = (ITweenable<T>)from.Offset(by);
+        to = (Tweenable<T>)from.Offset(by);
         return this;
     }
 
