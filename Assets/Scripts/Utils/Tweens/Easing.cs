@@ -20,9 +20,9 @@ public enum Easing
     QuintInOut
 }
 
-public static class Ease
+public static class EaseExtensions
 {
-    public static Func<float, float> Get(Easing easing) => easingMapping[easing];
+    public static Func<float, float> Func(this Easing easing) => easingMapping[easing];
 
     private static readonly Dictionary<Easing, Func<float, float>> easingMapping = new() {
         {Easing.Linear, t => t},

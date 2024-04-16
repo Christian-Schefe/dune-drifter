@@ -36,28 +36,26 @@ public struct TweenCycle
 
     public readonly IEnumerator GetCoroutine(Action<float> setter, Easing easing)
     {
-        var easingFunc = Ease.Get(easing);
+        var easingFunc = easing.Func();
 
-        float currentTime = Time.time;
-        float startTime = currentTime + initialWait;
-        float endTime = startTime + duration;
+        float startTime = Time.time + initialWait;
         float inverseDuration = 1 / duration;
         while (true)
         {
-            currentTime = Time.time;
-            if (currentTime < startTime)
+            var timeDelta = Time.time - startTime;
+
+            if (timeDelta < 0)
             {
                 yield return null;
                 continue;
             }
-
-            if (currentTime >= endTime)
+            if (timeDelta >= duration)
             {
                 setter?.Invoke(reversing ? 0 : 1);
                 break;
             }
 
-            float alpha = currentTime * inverseDuration;
+            float alpha = timeDelta * inverseDuration;
             setter?.Invoke(easingFunc(reversing ? 1 - alpha : alpha));
 
             yield return null;
@@ -87,11 +85,13 @@ public class Tween<T> : Tween
     private Tweenable<T> to;
     private Action<T> valSetter;
 
-    public Tween() : base()
+    public Tween(MonoBehaviour owner) : base(owner)
     {
         void Setter(float t) => valSetter?.Invoke(from.Lerp(to.Value, t));
         Use(Setter);
     }
+
+    public Tween() : this(null) { }
 
     public Tween<T> From(T from)
     {
@@ -128,7 +128,7 @@ public class Tween<T> : Tween
     public new Tween<T> RepeatCount(int? count) => (Tween<T>)base.RepeatCount(count);
     public new Tween<T> RepeatWait(float wait) => (Tween<T>)base.RepeatWait(wait);
     public new Tween<T> Reverse(bool reverse = true) => (Tween<T>)base.Reverse(reverse);
-    public new Tween<T> Easing(Easing easing) => (Tween<T>)base.Easing(easing);
+    public new Tween<T> Ease(Easing easing) => (Tween<T>)base.Ease(easing);
     public new Tween<T> OnStart(Action action, bool replace = false) => (Tween<T>)base.OnStart(action, replace);
     public new Tween<T> OnComplete(Action action, bool replace = false) => (Tween<T>)base.OnComplete(action, replace);
     public new Tween<T> OnCancel(Action action, bool replace = false) => (Tween<T>)base.OnCancel(action, replace);
@@ -146,12 +146,15 @@ public class Tween
 
     public bool Terminated { get; private set; }
 
-    public Tween()
+    public Tween() : this(null) { }
+
+    public Tween(MonoBehaviour owner)
     {
         setter = null;
         parameters = TweenParams.Default;
         callbacks = TweenCallbacks.Default;
         Terminated = false;
+        this.owner = owner;
     }
 
     public Tween Use(Action<float> setter, bool replace = false)
@@ -225,7 +228,7 @@ public class Tween
         return this;
     }
 
-    public Tween Easing(Easing easing)
+    public Tween Ease(Easing easing)
     {
         parameters.easing = easing;
         return this;
@@ -259,16 +262,31 @@ public class Tween
         return this;
     }
 
-    public TweenRoutine Start(TweenRoutine prev = null)
+    public bool Runnable => owner != null;
+    private void AssertRunnable()
     {
-        if (prev != null) return prev.Replace(this);
-        else return new TweenRoutine(this);
+        UnityEngine.Assertions.Assert.IsTrue(Runnable, "Can only run Tween if field 'Owner' is set");
     }
 
-    public void Start(ref TweenRoutine prev)
+    public TweenRoutine RunNew()
     {
-        if (prev != null) prev.Replace(this);
-        else prev = new TweenRoutine(this);
+        AssertRunnable();
+        TweenRoutine runner = new();
+        return runner.Enqueue(this);
+    }
+
+    public TweenRoutine RunImmediate(ref TweenRoutine runner)
+    {
+        AssertRunnable();
+        runner ??= new();
+        return runner.Replace(this);
+    }
+
+    public TweenRoutine RunQueued(ref TweenRoutine runner)
+    {
+        AssertRunnable();
+        runner ??= new();
+        return runner.Enqueue(this);
     }
 
     private TweenCycle GetCycle(int index)
@@ -331,46 +349,42 @@ public class Tween
 
 public class TweenRoutine
 {
-    public Coroutine coroutine;
-    public Tween tween;
+    private Coroutine coroutine;
+    private Tween tween;
 
-    public Queue<Tween> chain = new();
+    private readonly Queue<Tween> chain = new();
 
-    public TweenRoutine(Tween tween)
+    public bool Running { get; private set; }
+
+    private void StartTween(Tween tween)
     {
-        StartNew(tween);
-    }
-
-    private void StartNew(Tween tween)
-    {
-        tween.OnComplete(OnComplete);
+        tween.OnComplete(OnDrawNextTween);
         coroutine = tween.owner.StartCoroutine(tween.Coroutine());
         this.tween = tween;
+        Running = true;
     }
 
-    private void OnComplete()
+    private void OnDrawNextTween()
     {
-        if (chain.Count > 0)
-        {
-            StartNew(chain.Dequeue());
-        }
+        if (chain.Count > 0) StartTween(chain.Dequeue());
         else
         {
             coroutine = null;
             tween = null;
+            Running = false;
         }
     }
 
     public TweenRoutine Cancel(bool clearQueue = true)
     {
-        tween.owner.StopCoroutine(coroutine);
-        tween.OnCancel();
-
-        coroutine = null;
-        tween = null;
+        if (Running)
+        {
+            tween.owner.StopCoroutine(coroutine);
+            tween.OnCancel();
+        }
 
         if (clearQueue) chain.Clear();
-        else if (chain.Count > 0) StartNew(chain.Dequeue());
+        OnDrawNextTween();
 
         return this;
     }
@@ -378,20 +392,14 @@ public class TweenRoutine
     public TweenRoutine Replace(Tween newTween)
     {
         Cancel(true);
-        StartNew(newTween);
+        StartTween(newTween);
         return this;
     }
 
     public TweenRoutine Enqueue(Tween nextTween)
     {
-        if (tween != null)
-        {
-            chain.Enqueue(nextTween);
-        }
-        else
-        {
-            StartNew(tween);
-        }
+        if (Running) chain.Enqueue(nextTween);
+        else StartTween(nextTween);
         return this;
     }
 }
