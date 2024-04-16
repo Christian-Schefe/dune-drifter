@@ -20,14 +20,21 @@ public class RawTransform
 
     public RawTransform() : this(Vector3.zero, Quaternion.identity, Vector3.one) { }
 
-    public RawTransform(Transform transform, bool useLocal = true) : this(
+    public RawTransform(Transform transform, bool useLocal) : this(
         useLocal ? transform.localPosition : transform.position,
         useLocal ? transform.localRotation : transform.rotation,
-        useLocal ? transform.localScale : transform.lossyScale)
+        transform.localScale)
     { }
 
-    public static implicit operator RawTransform(Transform transform) => new(transform);
+    public static implicit operator RawTransform(Transform transform) => new(transform, true);
 
+    public void Transfer(Transform transform, bool useLocal)
+    {
+        if (useLocal) transform.SetLocalPositionAndRotation(Position, Rotation);
+        else transform.SetPositionAndRotation(Position, Rotation);
+
+        transform.localScale = Scale;
+    }
 
     public Vector3 Position
     {
@@ -140,6 +147,11 @@ public class RawTransform
     {
         this.scale = scale;
         UpdateMatrix();
+    }
+
+    public static RawTransform LerpUnclamped(RawTransform from, RawTransform to, float t)
+    {
+        return new(Vector3.LerpUnclamped(from.position, to.position, t), Quaternion.SlerpUnclamped(from.rotation, to.rotation, t), Vector3.LerpUnclamped(from.scale, to.scale, t));
     }
 
     private void UpdateMatrix()

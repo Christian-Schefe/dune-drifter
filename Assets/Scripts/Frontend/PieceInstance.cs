@@ -19,7 +19,9 @@ public class PieceInstance : MonoBehaviour
         var grid = main.grid;
         var fromVec3 = grid.HexToWorld(from);
         var toVec3 = grid.HexToWorld(piece.pos);
-        tween = Tweens.Pos(transform, fromVec3, toVec3, 1.0f, Easing.QuadInOut).Start(this, tween);
+
+        this.TweenPosition().From(fromVec3).To(toVec3).Duration(1.0f);
+        Tweens.Pos(transform, fromVec3, toVec3, 1.0f, Easing.QuadInOut).Owner(this).Start(ref tween);
     }
 
     public void Attack(Vector2Int to, Piece piece)
@@ -29,7 +31,7 @@ public class PieceInstance : MonoBehaviour
         var fromVec3 = grid.HexToWorld(piece.pos);
         var toVec3 = grid.HexToWorld(to);
 
-        tween = Tweens.Pos(transform, fromVec3, toVec3, 1.0f, Easing.QuadInOut).PingPong(true).Start(this, tween);
+        Tweens.Pos(transform, fromVec3, toVec3, 1.0f, Easing.QuadInOut).PingPong(true).Owner(this).Start(ref tween);
     }
 
     public void LoseShield()

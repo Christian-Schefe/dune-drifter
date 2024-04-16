@@ -60,3 +60,41 @@ public static class Tweens
         return Pos(target, target.position, to, duration, easing);
     }
 }
+
+public static class TweenExtensions
+{
+    public static Tween<RawTransform> TweenTransform(this MonoBehaviour owner)
+    {
+        return new Tween<RawTransform>().Use(t => t.Transfer(owner.transform, false)).From(new(owner.transform, false)).Owner(owner);
+    }
+
+    public static Tween<RawTransform> TweenLocalTransform(this MonoBehaviour owner)
+    {
+        return new Tween<RawTransform>().Use(t => t.Transfer(owner.transform, true)).From(new(owner.transform, true)).Owner(owner);
+    }
+
+    public static Tween<Vector3> TweenPosition(this MonoBehaviour owner)
+    {
+        return new Tween<Vector3>().Use(p => owner.transform.position = p).From(owner.transform.position).Owner(owner);
+    }
+
+    public static Tween<Vector3> TweenLocalPosition(this MonoBehaviour owner)
+    {
+        return new Tween<Vector3>().Use(p => owner.transform.localPosition = p).From(owner.transform.localPosition).Owner(owner);
+    }
+
+    public static Tween<Quaternion> TweenRotation(this MonoBehaviour owner)
+    {
+        return new Tween<Quaternion>().Use(r => owner.transform.rotation = r).From(owner.transform.rotation).Owner(owner);
+    }
+
+    public static Tween<Quaternion> TweenLocalRotation(this MonoBehaviour owner)
+    {
+        return new Tween<Quaternion>().Use(r => owner.transform.localRotation = r).From(owner.transform.localRotation).Owner(owner);
+    }
+
+    public static Tween<Vector3> TweenScale(this MonoBehaviour owner)
+    {
+        return new Tween<Vector3>().Use(p => owner.transform.localScale = p).From(owner.transform.localScale).Owner(owner);
+    }
+}

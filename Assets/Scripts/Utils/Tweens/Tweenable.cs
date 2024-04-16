@@ -50,3 +50,15 @@ public class QuatTweenable : Tweenable<Quaternion>
     protected override Quaternion LerpInternal(Quaternion to, float t) => Quaternion.SlerpUnclamped(Value, to, t);
     protected override Quaternion OffsetInternal(Quaternion to) => Value * to;
 }
+public class ColorTweenable : Tweenable<Color>
+{
+    public ColorTweenable(Color value) : base(value) { }
+    protected override Color LerpInternal(Color to, float t) => Color.LerpUnclamped(Value, to, t);
+    protected override Color OffsetInternal(Color to) => Value + to;
+}
+public class TransformTweenable : Tweenable<RawTransform>
+{
+    public TransformTweenable(RawTransform value) : base(value) { }
+    protected override RawTransform LerpInternal(RawTransform to, float t) => RawTransform.LerpUnclamped(Value, to, t);
+    protected override RawTransform OffsetInternal(RawTransform to) => new(Value.Position + to.Position, Value.Rotation * to.Rotation, Value.Scale + to.Scale);
+}

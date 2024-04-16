@@ -117,6 +117,7 @@ public class Tween<T> : Tween
         return this;
     }
 
+    public new Tween<T> Owner(MonoBehaviour owner) => (Tween<T>)base.Owner(owner);
     public new Tween<T> Delay(float delay) => (Tween<T>)base.Delay(delay);
     public new Tween<T> Duration(float duration) => (Tween<T>)base.Duration(duration);
     public new Tween<T> Loop(bool loop = true) => (Tween<T>)base.Loop(loop);
@@ -136,12 +137,14 @@ public class Tween<T> : Tween
 [Serializable]
 public class Tween
 {
-    private TweenParams parameters;
-    private TweenCallbacks callbacks;
+    public TweenParams parameters;
+    public TweenCallbacks callbacks;
+    public MonoBehaviour owner;
 
     protected Action<float> setter;
 
     public bool Terminated { get; private set; }
+
     public Tween()
     {
         setter = null;
@@ -154,6 +157,12 @@ public class Tween
     {
         if (replace) this.setter = setter;
         else this.setter += setter;
+        return this;
+    }
+
+    public Tween Owner(MonoBehaviour owner)
+    {
+        this.owner = owner;
         return this;
     }
 
@@ -249,10 +258,16 @@ public class Tween
         return this;
     }
 
-    public TweenRoutine Start(MonoBehaviour owner, TweenRoutine prev = null)
+    public TweenRoutine Start(TweenRoutine prev = null)
     {
         if (prev != null) return prev.Replace(this);
-        else return new TweenRoutine(owner.StartCoroutine(Coroutine()), this, owner);
+        else return new TweenRoutine(this);
+    }
+
+    public void Start(ref TweenRoutine prev)
+    {
+        if (prev != null) prev.Replace(this);
+        else prev = new TweenRoutine(this);
     }
 
     private TweenCycle GetCycle(int index)
@@ -317,46 +332,65 @@ public class TweenRoutine
 {
     public Coroutine coroutine;
     public Tween tween;
-    public MonoBehaviour owner;
 
     public Queue<Tween> chain = new();
 
-    public TweenRoutine(Coroutine coroutine, Tween tween, MonoBehaviour owner)
+    public TweenRoutine(Tween tween)
+    {
+        StartNew(tween);
+    }
+
+    private void StartNew(Tween tween)
     {
         tween.OnComplete(OnComplete);
-
-        this.coroutine = coroutine;
+        coroutine = tween.owner.StartCoroutine(tween.Coroutine());
         this.tween = tween;
-        this.owner = owner;
-
-    }
-
-    public void Cancel()
-    {
-        owner.StopCoroutine(coroutine);
-        tween.OnCancel();
-    }
-
-    public TweenRoutine Replace(Tween newTween)
-    {
-        Cancel();
-        return newTween.Start(owner);
     }
 
     private void OnComplete()
     {
         if (chain.Count > 0)
         {
-            var newRuntime = chain.Dequeue().Start(owner, this);
-            coroutine = newRuntime.coroutine;
-            tween = newRuntime.tween;
-            owner = newRuntime.owner;
+            StartNew(chain.Dequeue());
+        }
+        else
+        {
+            coroutine = null;
+            tween = null;
         }
     }
 
-    public TweenRoutine Chain(Tween nextTween)
+    public TweenRoutine Cancel(bool clearQueue = true)
     {
-        chain.Enqueue(nextTween);
+        tween.owner.StopCoroutine(coroutine);
+        tween.OnCancel();
+
+        coroutine = null;
+        tween = null;
+
+        if (clearQueue) chain.Clear();
+        else if (chain.Count > 0) StartNew(chain.Dequeue());
+
+        return this;
+    }
+
+    public TweenRoutine Replace(Tween newTween)
+    {
+        Cancel(true);
+        StartNew(newTween);
+        return this;
+    }
+
+    public TweenRoutine Enqueue(Tween nextTween)
+    {
+        if (tween != null)
+        {
+            chain.Enqueue(nextTween);
+        }
+        else
+        {
+            StartNew(tween);
+        }
         return this;
     }
 }
