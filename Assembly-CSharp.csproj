@@ -61,37 +61,64 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\TweenTest.cs" />
+    <Compile Include="Assets\Scripts\Frontend\Hand\PlayCardInstance.cs" />
+    <Compile Include="Assets\Scripts\Utils\Math\RandomU.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Run.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Arena.cs" />
     <Compile Include="Assets\Scripts\Utils\Globals.cs" />
-    <Compile Include="Assets\Scripts\Utils\Queries.cs" />
-    <Compile Include="Assets\Scripts\Utils\Commands.cs" />
+    <Compile Include="Assets\Scripts\Utils\Events\Signals.cs" />
     <Compile Include="Assets\Scripts\Utils\Log.cs" />
-    <Compile Include="Assets\Scripts\Utils\Matrix.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\Easing.cs" />
-    <Compile Include="Assets\Scripts\Utils\Signals.cs" />
+    <Compile Include="Assets\Scripts\Utils\Math\Matrix.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
     <Compile Include="Assets\Scripts\Utils\RawTransform.cs" />
     <Compile Include="Assets\Scripts\Frontend\RunManager.cs" />
     <Compile Include="Assets\Scripts\Utils\ComponentCache.cs" />
+    <Compile Include="Assets\Scripts\Frontend\Hand\HandManager.cs" />
+    <Compile Include="Assets\Scripts\Frontend\Hand\PlayCardObject.cs" />
     <Compile Include="Assets\Scripts\Utils\SaveState.cs" />
     <Compile Include="Assets\Scripts\Frontend\Shield.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Events.cs" />
     <Compile Include="Assets\Scripts\Frontend\MatchManager.cs" />
+    <Compile Include="Assets\Scripts\Utils\Events\Commands.cs" />
     <Compile Include="Assets\Scripts\Utils\HexGrid.cs" />
     <Compile Include="Assets\Scripts\Frontend\PiecePrefabMapping.cs" />
     <Compile Include="Assets\Scripts\Frontend\PieceManager.cs" />
-    <Compile Include="Assets\Scripts\Utils\RandomU.cs" />
-    <Compile Include="Assets\Scripts\Utils\MathU.cs" />
     <Compile Include="Assets\Scripts\Frontend\PieceInstance.cs" />
+    <Compile Include="Assets\Scripts\Utils\Events\Queries.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Piece.cs" />
     <Compile Include="Assets\Scripts\Gameplay\PlayCard.cs" />
     <Compile Include="Assets\Scripts\Gameplay\RuleCard.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\TweenExtensions.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Match.cs" />
+    <Compile Include="Assets\Scripts\Utils\Math\MathU.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Deck.cs" />
+    <Compile Include="Assets\Scripts\Frontend\Hand\PlayCardMapping.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\Tween.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\Tweenable.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMPro_Mobile.cginc" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF SSD.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface-Mobile.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface.shader" />
+    <None Include="Assets\TextMesh Pro\Sprites\EmojiOne Attribution.txt" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Custom-Atlas.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile SSD.shader" />
+    <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMPro_Properties.cginc" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
+    <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
+    <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile.shader" />
+    <None Include="Assets\TextMesh Pro\Shaders\TMP_Sprite.shader" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

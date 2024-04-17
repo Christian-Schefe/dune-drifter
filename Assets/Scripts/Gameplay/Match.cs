@@ -11,10 +11,10 @@ public class MatchParams
 public class Match
 {
     public Arena arena;
-    public Hand<IPlayCard> hand;
+    public Hand hand;
     public Run run;
 
-    public Match(Run run, Deck<IPlayCard> deck, MatchParams matchParams)
+    public Match(Run run, Deck deck, MatchParams matchParams)
     {
         this.run = run;
         arena = new(matchParams.arenaSize);
@@ -25,9 +25,10 @@ public class Match
 
     public CommandResponse OnPlayCard((int index, PlayCardTarget target) args)
     {
-        var card = hand.PlayCard(args.index);
+        var card = hand.GetCard(args.index);
         if (card.Execute(this, args.target))
         {
+            hand.PlayCard(args.index);
             return CommandResponse.Ok;
         }
         else

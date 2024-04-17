@@ -18,6 +18,12 @@ public static class PieceSignal
     public class Spawned : Signal<Vector2Int, Piece> { }
 }
 
+public static class HandSignal
+{
+    public class Draw: Signal<int, Hand> { }
+    public class Play : Signal<int, Hand> { }
+}
+
 public class GetMoveOptionsQuery : Query<Vector2Int, (List<Vector2Int>, List<Vector2Int>)> { }
 
 public static class Events

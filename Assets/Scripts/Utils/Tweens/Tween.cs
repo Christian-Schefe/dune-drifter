@@ -262,7 +262,7 @@ public class Tween
         return this;
     }
 
-    public bool Runnable => owner != null;
+    private bool Runnable => owner != null;
     private void AssertRunnable()
     {
         UnityEngine.Assertions.Assert.IsTrue(Runnable, "Can only run Tween if field 'Owner' is set");
@@ -272,21 +272,21 @@ public class Tween
     {
         AssertRunnable();
         TweenRoutine runner = new();
-        return runner.Enqueue(this);
+        return runner.RunQueued(this);
     }
 
     public TweenRoutine RunImmediate(ref TweenRoutine runner)
     {
         AssertRunnable();
         runner ??= new();
-        return runner.Replace(this);
+        return runner.RunImmediate(this);
     }
 
     public TweenRoutine RunQueued(ref TweenRoutine runner)
     {
         AssertRunnable();
         runner ??= new();
-        return runner.Enqueue(this);
+        return runner.RunQueued(this);
     }
 
     private TweenCycle GetCycle(int index)
@@ -375,28 +375,32 @@ public class TweenRoutine
         }
     }
 
-    public TweenRoutine Cancel(bool clearQueue = true)
+    public TweenRoutine Cancel()
+    {
+        chain.Clear();
+        return Skip();
+    }
+
+    public TweenRoutine Skip()
     {
         if (Running)
         {
             tween.owner.StopCoroutine(coroutine);
             tween.OnCancel();
         }
-
-        if (clearQueue) chain.Clear();
         OnDrawNextTween();
 
         return this;
     }
 
-    public TweenRoutine Replace(Tween newTween)
+    public TweenRoutine RunImmediate(Tween newTween)
     {
-        Cancel(true);
+        Cancel();
         StartTween(newTween);
         return this;
     }
 
-    public TweenRoutine Enqueue(Tween nextTween)
+    public TweenRoutine RunQueued(Tween nextTween)
     {
         if (Running) chain.Enqueue(nextTween);
         else StartTween(nextTween);

@@ -10,13 +10,16 @@ public abstract class Tweenable<T>
 
     public static explicit operator Tweenable<T>(T val)
     {
-        if (val is float f) return new FloatTweenable(f) as Tweenable<T>;
-        if (val is Vector2 v2) return new Vec2Tweenable(v2) as Tweenable<T>;
-        if (val is Vector3 v3) return new Vec3Tweenable(v3) as Tweenable<T>;
-        if (val is Quaternion q) return new QuatTweenable(q) as Tweenable<T>;
-        if (val is Color c) return new ColorTweenable(c) as Tweenable<T>;
-        if (val is RawTransform t) return new TransformTweenable(t) as Tweenable<T>;
-        throw new NotImplementedException();
+        return val switch
+        {
+            float f => new FloatTweenable(f) as Tweenable<T>,
+            Vector2 v2 => new Vec2Tweenable(v2) as Tweenable<T>,
+            Vector3 v3 => new Vec3Tweenable(v3) as Tweenable<T>,
+            Quaternion q => new QuatTweenable(q) as Tweenable<T>,
+            Color c => new ColorTweenable(c) as Tweenable<T>,
+            RawTransform t => new TransformTweenable(t) as Tweenable<T>,
+            _ => throw new NotImplementedException(),
+        };
     }
     public static implicit operator T(Tweenable<T> val) => val.Value;
 

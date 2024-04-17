@@ -5,7 +5,7 @@ using UnityEngine;
 public class Run
 {
     public List<RuleCard> ruleCards;
-    public Deck<IPlayCard> deck;
+    public Deck deck;
 
     public LoopState currentLoopState;
 
@@ -25,7 +25,7 @@ public class Run
         List<IPlayCard> playCards = new();
         for (int i = 0; i < 10; i++)
         {
-            playCards.Add(new SpawnPieceCard(PieceType.Sphere));
+            playCards.Add(new SpawnPieceCard(PieceType.Protector));
         }
         deck = new(playCards);
     }

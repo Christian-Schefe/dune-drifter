@@ -5,10 +5,12 @@ using UnityEngine;
 public interface IPlayCard
 {
     bool Execute(Match match, PlayCardTarget target);
+    PlayCardRegistry Type { get; }
 }
 
 public abstract class PlayCard<T> : IPlayCard where T : PlayCardTarget
 {
+    public abstract PlayCardRegistry Type { get; }
     public abstract bool Execute(Match match, T target);
 
     public bool Execute(Match match, PlayCardTarget target)
@@ -20,6 +22,7 @@ public abstract class PlayCard<T> : IPlayCard where T : PlayCardTarget
 public class SpawnPieceCard : PlayCard<PlayCardTarget.SingleFreeField>
 {
     public PieceType piece;
+    public override PlayCardRegistry Type => PlayCardStatics.spawnCards[piece];
 
     public SpawnPieceCard(PieceType piece)
     {
@@ -61,4 +64,17 @@ public abstract class PlayCardTarget
         }
     }
     public class None : PlayCardTarget { }
+}
+
+public enum PlayCardRegistry
+{
+    SpawnProtector, GiveShield, Cleanse
+}
+
+public static class PlayCardStatics
+{
+    public static Dictionary<PieceType, PlayCardRegistry> spawnCards = new()
+    {
+        { PieceType.Protector, PlayCardRegistry.SpawnProtector }
+    };
 }
