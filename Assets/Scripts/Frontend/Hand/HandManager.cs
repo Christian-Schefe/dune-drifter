@@ -17,8 +17,7 @@ public class HandManager : MonoBehaviour
         var instance = entry.CreateInstance(transform);
         cards.Add(cardIndex, instance);
         instance.OnDraw(cardIndex);
-        UpdateCardPositions();
-        Log.Debug("Draw card {0}", cardIndex);
+        Log.Debug("Draw card", cardIndex);
     }
 
     private void OnPlay(int cardIndex, Hand hand)
@@ -27,19 +26,7 @@ public class HandManager : MonoBehaviour
         cards.Remove(cardIndex);
 
         instance.OnPlay();
-        UpdateCardPositions();
-        Log.Debug("Play card {0}", cardIndex);
-    }
-
-    private void UpdateCardPositions()
-    {
-        foreach (var pair in cards)
-        {
-            var index = pair.Key;
-            var instance = pair.Value;
-
-            instance.targetPosition = GetCardPosition(index);
-        }
+        Log.Debug("Play card", cardIndex);
     }
 
     private void Update()
@@ -48,19 +35,31 @@ public class HandManager : MonoBehaviour
         var camera = Globals.Get<Camera>();
 
         var mouse = Input.mousePosition;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(), mouse, camera, out var point);
 
-        var cardHits = cards.Where(c => c.Value.RectTransform.rect.Contains(point)).Select(c =>
+        var localPoints = cards.Select(c =>
         {
-            return (Mathf.Abs(c.Value.RectTransform.rect.center.x - point.x), c.Value.cardIndex);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(c.Value.RectTransform, mouse, null, out var point);
+            return point;
+        }).ToList();
+
+        var cardHits = cards.Where(c =>
+        {
+            return c.Value.RectTransform.rect.Contains(localPoints[c.Key]);
+        }).Select(c =>
+        {
+            return (Mathf.Abs(c.Value.RectTransform.rect.center.x - localPoints[c.Key].x), c.Value.cardIndex);
         }).OrderByDescending(c => c.Item1).ToList();
 
-        hoveredCard = cardHits.Count > 0 ? cardHits.FirstOrDefault().cardIndex : null;
+        if (hoveredCard is not int prevHover || cardHits.FindIndex(e => e.cardIndex == prevHover) < 0)
+        {
+            hoveredCard = cardHits.Count > 0 ? cardHits.FirstOrDefault().cardIndex : null;
+        }
 
         if (hoveredCard is int card)
         {
-            cards[card].transform.SetAsFirstSibling();
+            cards[card].RectTransform.SetAsLastSibling();
         }
+        UpdateCardTransform();
     }
 
     private void OnEnable()
@@ -75,17 +74,25 @@ public class HandManager : MonoBehaviour
         Events.Get<HandSignal.Play>().RemoveListener(OnPlay);
     }
 
-    public Vector2 GetCardPosition(int index)
+    public void CalculateHoveredCard()
+    {
+        var canvas = Globals.Get<Canvas>();
+        var mouseScreen = Input.mousePosition;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(), mouseScreen, null, out var canvasPoint);
+    }
+
+    public void UpdateCardTransform()
     {
         var canvas = Globals.Get<Canvas>();
 
         var canvasSize = canvas.GetComponent<RectTransform>().rect.size;
 
-        var cardWidth = 200f;
-        var cardHeight = 300f;
+        var restScale = 0.6f;
+        var cardWidth = 250f * restScale;
+        var cardHeight = 350f * restScale;
 
         var maxWidth = canvasSize.x * 0.5f;
-        var maxGap = cardWidth * 2.0f;
+        var maxGap = cardWidth * 1.0f;
 
         var handSize = cards.Count;
 
@@ -96,8 +103,16 @@ public class HandManager : MonoBehaviour
         var leftCards = (handSize - 1) * 0.5f;
         var startX = leftCards * gap * -1;
 
-        var hoverHeight = cardHeight * 0.5f;
+        foreach (var pair in cards)
+        {
+            var index = pair.Key;
+            var instance = pair.Value;
 
-        return new Vector2(startX + index * gap, -canvasSize.y * 0.5f + cardHeight * 0.5f + hoverHeight);
+            bool isHovered = hoveredCard is int hovered && hovered == index;
+            var hoverHeight = isHovered ? cardHeight * 0.15f : 0;
+
+            instance.targetPosition = new Vector2(startX + index * gap, -canvasSize.y * 0.5f + cardHeight * 0.5f + hoverHeight);
+            instance.targetScale = isHovered ? 1.0f : restScale;
+        }
     }
 }

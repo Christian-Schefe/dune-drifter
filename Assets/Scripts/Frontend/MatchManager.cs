@@ -12,12 +12,12 @@ public class MatchManager : MonoBehaviour
     public void OnMatchBegin(Match match)
     {
         this.match = match;
-        matchCoroutine = StartCoroutine(MatchCoroutine());
+        //matchCoroutine = StartCoroutine(MatchCoroutine());
     }
 
     public void OnMatchEnd(Match match)
     {
-        StopCoroutine(matchCoroutine);
+        //StopCoroutine(matchCoroutine);
         this.match = null;
     }
 

@@ -19,9 +19,9 @@ public struct Matrix2x2
 
     public static Matrix2x2 Identity => new(1f, 0f, 0f, 1f);
 
-    public float Determinant => m00 * m11 - m01 * m10;
+    public readonly float Determinant => m00 * m11 - m01 * m10;
 
-    public Matrix2x2 Inverse
+    public readonly Matrix2x2 Inverse
     {
         get
         {

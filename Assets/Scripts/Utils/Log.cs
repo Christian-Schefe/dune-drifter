@@ -44,7 +44,8 @@ public static class Log
             System.Type type => $"Type({type})",
             IDictionary dict => $"{{{IterToStr(dict)}}}",
             IEnumerable iter => $"[{IterToStr(iter)}]",
-            object any => any.ToString()
+            null => "null",
+            _ => obj.ToString(),
         };
     }
 

@@ -25,43 +25,41 @@ public abstract class Tweenable<T>
 
     public abstract T Lerp(T to, float t);
     public abstract T Offset(T by);
-
-    public static T Lerp(T from, T to, float t) => ((Tweenable<T>)from).Lerp(to, t);
 }
 public class FloatTweenable : Tweenable<float>
 {
     public FloatTweenable(float value) : base(value) { }
     public override float Lerp(float to, float t) => Mathf.LerpUnclamped(Value, to, t);
-    public override float Offset(float to) => Value + to;
+    public override float Offset(float by) => Value + by;
 }
 public class Vec2Tweenable : Tweenable<Vector2>
 {
     public Vec2Tweenable(Vector2 value) : base(value) { }
     public override Vector2 Lerp(Vector2 to, float t) => Vector2.LerpUnclamped(Value, to, t);
-    public override Vector2 Offset(Vector2 to) => Value + to;
+    public override Vector2 Offset(Vector2 by) => Value + by;
 
 }
 public class Vec3Tweenable : Tweenable<Vector3>
 {
     public Vec3Tweenable(Vector3 value) : base(value) { }
     public override Vector3 Lerp(Vector3 to, float t) => Vector3.LerpUnclamped(Value, to, t);
-    public override Vector3 Offset(Vector3 to) => Value + to;
+    public override Vector3 Offset(Vector3 by) => Value + by;
 }
 public class QuatTweenable : Tweenable<Quaternion>
 {
     public QuatTweenable(Quaternion value) : base(value) { }
     public override Quaternion Lerp(Quaternion to, float t) => Quaternion.SlerpUnclamped(Value, to, t);
-    public override Quaternion Offset(Quaternion to) => Value * to;
+    public override Quaternion Offset(Quaternion by) => Value * by;
 }
 public class ColorTweenable : Tweenable<Color>
 {
     public ColorTweenable(Color value) : base(value) { }
     public override Color Lerp(Color to, float t) => Color.LerpUnclamped(Value, to, t);
-    public override Color Offset(Color to) => Value + to;
+    public override Color Offset(Color by) => Value + by;
 }
 public class TransformTweenable : Tweenable<RawTransform>
 {
     public TransformTweenable(RawTransform value) : base(value) { }
     public override RawTransform Lerp(RawTransform to, float t) => RawTransform.LerpUnclamped(Value, to, t);
-    public override RawTransform Offset(RawTransform to) => new(Value.Position + to.Position, Value.Rotation * to.Rotation, Value.Scale + to.Scale);
+    public override RawTransform Offset(RawTransform by) => new(Value.Position + by.Position, Value.Rotation * by.Rotation, Value.Scale + by.Scale);
 }
