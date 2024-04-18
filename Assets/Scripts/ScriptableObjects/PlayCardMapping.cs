@@ -7,9 +7,9 @@ public class PlayCardMapping : ScriptableObject
 {
     public PlayCardObject[] mappings;
 
-    private Dictionary<PlayCardRegistry, PlayCardObject> typeMap;
+    private Dictionary<PlayCardType, PlayCardObject> typeMap;
 
-    public Dictionary<PlayCardRegistry, PlayCardObject> GetDict()
+    public Dictionary<PlayCardType, PlayCardObject> GetDict()
     {
         if (typeMap != null && typeMap.Count > 0) return typeMap;
         typeMap ??= new();
@@ -21,5 +21,5 @@ public class PlayCardMapping : ScriptableObject
         return typeMap;
     }
 
-    public PlayCardObject Get(PlayCardRegistry type) => GetDict()[type];
+    public PlayCardObject Get(PlayCardType type) => GetDict()[type];
 }

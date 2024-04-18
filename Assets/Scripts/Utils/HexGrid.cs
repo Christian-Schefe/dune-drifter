@@ -13,7 +13,11 @@ public class HexGridData<T>
     {
         data = new();
         neighbours = new();
-        foreach (var key in data.Keys) neighbours.Add(key, HexGrid.Neighbours(key).Where(Inside).ToList());
+    }
+
+    public bool TryGetData(Vector2Int pos, out T piece)
+    {
+        return data.TryGetValue(pos, out piece);
     }
 
     public bool Inside(Vector2Int vec) => data.ContainsKey(vec);
@@ -34,6 +38,7 @@ public class HexGridData<T>
                 data.Add(pos, default);
             }
         }
+        foreach (var key in data.Keys) neighbours.Add(key, HexGrid.Neighbours(key).Where(Inside).ToList());
     }
 
     public void Cleanup(System.Action<Vector2Int, T> action = null)
@@ -67,7 +72,7 @@ public class HexGridData<T>
     }
 }
 
-public class HexGrid
+public class HexGrid : MonoBehaviour
 {
     public const float SQRT_3 = 1.73205080757f;
 
@@ -77,11 +82,11 @@ public class HexGrid
     public static Matrix2x2 hexToLocal = Matrix2x2.Cols(IHat, JHat);
     public static Matrix2x2 localToHex = hexToLocal.Inverse;
 
-    public RawTransform transform;
+    public RawTransform rawTransform;
 
-    public HexGrid(RawTransform transform)
+    private void Awake()
     {
-        this.transform = transform;
+        rawTransform = transform;
     }
 
     public static List<Vector2Int> Neighbours(Vector2Int vec)
@@ -100,18 +105,27 @@ public class HexGrid
     public static Vector2Int UpLeft => new(1, -1);
     public static Vector2Int DownRight => new(-1, 1);
 
+    public Vector2 RayIntersect(Ray worldRay)
+    {
+        return WorldToHex(MathU.PlaneRayIntersect(worldRay, rawTransform.Position, rawTransform.Up));
+    }
+    public Vector2Int RayIntersectRound(Ray worldRay)
+    {
+        return WorldToHexRound(MathU.PlaneRayIntersect(worldRay, rawTransform.Position, rawTransform.Up));
+    }
+
     public Vector3 HexToWorld(Vector2 vec)
     {
-        return transform.LocalToWorld(HexToLocal(vec));
+        return rawTransform.LocalToWorld(HexToLocal(vec));
     }
     public Vector2 WorldToHex(Vector3 vec)
     {
-        return LocalToHex(transform.WorldToLocal(vec));
+        return LocalToHex(rawTransform.WorldToLocal(vec));
     }
 
     public Vector2Int WorldToHexRound(Vector3 vec)
     {
-        return LocalToHexRound(transform.WorldToLocal(vec));
+        return LocalToHexRound(rawTransform.WorldToLocal(vec));
     }
 
     public Vector3 WorldToWorldRound(Vector3 vec)
@@ -149,19 +163,19 @@ public class HexGrid
 
     public Vector2 WorldRayToHex(Ray ray)
     {
-        var worldIntersect = MathU.PlaneRayIntersect(ray, transform.Position, transform.Up);
+        var worldIntersect = MathU.PlaneRayIntersect(ray, rawTransform.Position, rawTransform.Up);
         return WorldToHex(worldIntersect);
     }
 
     public Vector2Int WorldRayToHexRound(Ray ray)
     {
-        var worldIntersect = MathU.PlaneRayIntersect(ray, transform.Position, transform.Up);
+        var worldIntersect = MathU.PlaneRayIntersect(ray, rawTransform.Position, rawTransform.Up);
         return WorldToHexRound(worldIntersect);
     }
 
     public Vector3 WorldRayToWorldRound(Ray ray)
     {
-        var worldIntersect = MathU.PlaneRayIntersect(ray, transform.Position, transform.Up);
+        var worldIntersect = MathU.PlaneRayIntersect(ray, rawTransform.Position, rawTransform.Up);
         return WorldToWorldRound(worldIntersect);
     }
 

@@ -15,4 +15,4 @@ MonoBehaviour:
   type: 0
   prefab: {fileID: -4617909958164620084, guid: 076dfa8a8ad13d04d8646cf3ac954a70, type: 3}
   title: Spawn Protector
-  description: Spawns a Protector Piece
+  image: {fileID: 21300000, guid: 02b9cd023d039a7439d6ca58fafe6d85, type: 3}

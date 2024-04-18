@@ -6,7 +6,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "PlayCardObject", menuName = "ScriptableObjects/PlayCardObject")]
 public class PlayCardObject : ScriptableObject
 {
-    public PlayCardRegistry type;
+    public PlayCardType type;
     public PlayCardInstance prefab;
     public string title;
     public Sprite image;

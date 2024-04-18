@@ -15,6 +15,24 @@ public static class TweenExtensions
         return new Tween<RawTransform>(owner).Use(t => t.Transfer(owner.transform, true)).From(new(owner.transform, true));
     }
 
+    public static Tween<Vector2> TweenAnchoredPosition(this MonoBehaviour owner)
+    {
+        var rectTransform = owner.GetComponent<RectTransform>();
+        return new Tween<Vector2>(owner).Use(p => rectTransform.anchoredPosition = p).From(rectTransform.anchoredPosition);
+    }
+
+    public static Tween<float> TweenAnchoredPositionX(this MonoBehaviour owner)
+    {
+        var rectTransform = owner.GetComponent<RectTransform>();
+        return new Tween<float>(owner).Use(p => rectTransform.SetAnchoredPosX(p)).From(rectTransform.anchoredPosition.x);
+    }
+
+    public static Tween<float> TweenAnchoredPositionY(this MonoBehaviour owner)
+    {
+        var rectTransform = owner.GetComponent<RectTransform>();
+        return new Tween<float>(owner).Use(p => rectTransform.SetAnchoredPosY(p)).From(rectTransform.anchoredPosition.y);
+    }
+
     public static Tween<Vector3> TweenPosition(this MonoBehaviour owner)
     {
         return new Tween<Vector3>(owner).Use(p => owner.transform.position = p).From(owner.transform.position);

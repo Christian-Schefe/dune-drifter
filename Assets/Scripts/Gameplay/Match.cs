@@ -13,27 +13,75 @@ public class Match
     public Arena arena;
     public Hand hand;
     public Run run;
+    public bool currentPlayer;
+
+    public int CardsToPlay { get; private set; }
 
     public Match(Run run, Deck deck, MatchParams matchParams)
     {
         this.run = run;
         arena = new(matchParams.arenaSize);
         hand = new(deck, matchParams.handSize);
-
-        Queries.Get<PlayCardCommand>().SetResponder(OnPlayCard);
+        currentPlayer = true;
+        CardsToPlay = 1;
     }
 
-    public CommandResponse OnPlayCard((int index, PlayCardTarget target) args)
+    public void PlayCard(int cardIndex, Vector2Int target)
     {
-        var card = hand.GetCard(args.index);
-        if (card.Execute(this, args.target))
+        if (CardsToPlay <= 0) return;
+        var card = hand.GetCard(cardIndex);
+        if (ExecuteCard(card, target))
         {
-            hand.PlayCard(args.index);
-            return CommandResponse.Ok;
+            hand.PlayCard(card);
+            CardsToPlay--;
         }
-        else
+    }
+
+    public void MovePiece(Vector2Int from, Vector2Int to)
+    {
+        if (arena.CanMovePiece(from, to))
         {
-            return CommandResponse.BadRequest;
+            arena.MovePiece(from, to);
         }
+    }
+
+    public void EndTurn()
+    {
+        Main.Events.turnEnd();
+        arena.OnEndTurn();
+        currentPlayer = !currentPlayer;
+        CardsToPlay = 1;
+        Main.Events.turnStart();
+    }
+
+    private bool ExecuteCard(PlayCard card, Vector2Int target)
+    {
+        switch (card.type)
+        {
+            case PlayCardType.SpawnPiece:
+                {
+                    if (card.data is not (PieceType, bool)) return false;
+                    var (type, team) = ((PieceType, bool))card.data;
+                    if (!arena.CanSpawnPiece(target, team)) return false;
+                    arena.SpawnPiece(target, type, team);
+                    break;
+                }
+            case PlayCardType.GiveBuff:
+                {
+                    if (card.data is not PieceBuff buff) return false;
+                    if (!arena.TryGetPiece(target, out _)) return false;
+                    arena.GiveBuff(target, buff);
+                    break;
+                }
+            case PlayCardType.Cleanse:
+                {
+                    if (card.data is not PieceBuff buff) return false;
+                    if (!arena.TryGetPiece(target, out _)) return false;
+                    arena.TakeBuff(target, ~PieceBuff.None);
+                    break;
+                }
+        }
+
+        return true;
     }
 }

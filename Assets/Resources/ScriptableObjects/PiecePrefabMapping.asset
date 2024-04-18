@@ -18,3 +18,8 @@ MonoBehaviour:
       type: 3}
     opponentPrefab: {fileID: 862780791105176642, guid: 9b61ac1daf423f646bdb0b5a95edffbe,
       type: 3}
+  - pieceType: 1
+    playerPrefab: {fileID: 862780791105176642, guid: 1a5eee1669af1e945be9fb3cd7ac271b,
+      type: 3}
+    opponentPrefab: {fileID: 862780791105176642, guid: 9b61ac1daf423f646bdb0b5a95edffbe,
+      type: 3}

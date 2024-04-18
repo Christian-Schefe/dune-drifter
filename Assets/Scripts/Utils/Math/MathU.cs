@@ -66,6 +66,18 @@ public static class MathU
         return ray.GetPoint(t);
     }
 
+    public static RectTransform SetAnchoredPosX(this RectTransform transform, float x)
+    {
+        transform.anchoredPosition = new Vector2(x, transform.anchoredPosition.y);
+        return transform;
+    }
+
+    public static RectTransform SetAnchoredPosY(this RectTransform transform, float y)
+    {
+        transform.anchoredPosition = new Vector2(transform.anchoredPosition.x, y);
+        return transform;
+    }
+
     public static Transform SetPosX(this Transform transform, float x)
     {
         transform.position = new Vector3(x, transform.position.y, transform.position.z);

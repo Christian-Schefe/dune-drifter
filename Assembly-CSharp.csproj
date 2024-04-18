@@ -60,41 +60,42 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.24f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\TweenTest.cs" />
-    <Compile Include="Assets\Scripts\Frontend\Hand\PlayCardInstance.cs" />
     <Compile Include="Assets\Scripts\Utils\Math\RandomU.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Run.cs" />
     <Compile Include="Assets\Scripts\Utils\Globals.cs" />
     <Compile Include="Assets\Scripts\Utils\Events\Signals.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\Easing.cs" />
-    <Compile Include="Assets\Scripts\Frontend\RunManager.cs" />
-    <Compile Include="Assets\Scripts\Frontend\Hand\PlayCardObject.cs" />
+    <Compile Include="Assets\Scripts\GameObservers\GameObserver.cs" />
     <Compile Include="Assets\Scripts\Utils\SaveState.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\Events.cs" />
-    <Compile Include="Assets\Scripts\Utils\Events\Commands.cs" />
     <Compile Include="Assets\Scripts\Utils\HexGrid.cs" />
-    <Compile Include="Assets\Scripts\Frontend\PiecePrefabMapping.cs" />
-    <Compile Include="Assets\Scripts\Frontend\PieceManager.cs" />
     <Compile Include="Assets\Scripts\Gameplay\PlayCard.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\TweenExtensions.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Match.cs" />
-    <Compile Include="Assets\Scripts\Frontend\Hand\PlayCardMapping.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\Tween.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObjects\PlayCardMapping.cs" />
+    <Compile Include="Assets\Scripts\Props\Shield.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\Hand.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObjects\PiecePrefabMapping.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Arena.cs" />
     <Compile Include="Assets\Scripts\Utils\Log.cs" />
     <Compile Include="Assets\Scripts\Utils\Math\Matrix.cs" />
+    <Compile Include="Assets\Scripts\Utils\Math\InputU.cs" />
+    <Compile Include="Assets\Scripts\GameObservers\HandManager.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
     <Compile Include="Assets\Scripts\Utils\RawTransform.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObjects\PlayCardObject.cs" />
     <Compile Include="Assets\Scripts\Utils\ComponentCache.cs" />
-    <Compile Include="Assets\Scripts\Frontend\Hand\HandManager.cs" />
-    <Compile Include="Assets\Scripts\Frontend\Shield.cs" />
-    <Compile Include="Assets\Scripts\Frontend\MatchManager.cs" />
-    <Compile Include="Assets\Scripts\Frontend\PieceInstance.cs" />
+    <Compile Include="Assets\Scripts\GameObservers\PieceInstance.cs" />
+    <Compile Include="Assets\Scripts\Utils\Events\Events.cs" />
     <Compile Include="Assets\Scripts\Utils\Events\Queries.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Piece.cs" />
+    <Compile Include="Assets\Scripts\GameObservers\PlayCardInstance.cs" />
+    <Compile Include="Assets\Scripts\Props\Tile.cs" />
     <Compile Include="Assets\Scripts\Gameplay\RuleCard.cs" />
+    <Compile Include="Assets\Scripts\GameObservers\ArenaManager.cs" />
     <Compile Include="Assets\Scripts\Utils\Math\MathU.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Deck.cs" />
+    <Compile Include="Assets\Scripts\GameObservers\PieceManager.cs" />
     <Compile Include="Assets\Scripts\Utils\Tweens\Tweenable.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -453,12 +454,12 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.24f1\Editor\Data\Managed\UnityEngine\UnityEditor.UnityConnectModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
-      <HintPath>Library\PackageCache\com.unity.visualscripting@1.9.2\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
       <HintPath>Library\PackageCache\com.unity.collections@1.2.4\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@1.9.2\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="netstandard">
@@ -1081,20 +1082,20 @@
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.2D.Tilemap.Extras">
-      <HintPath>Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
+    <Reference Include="Unity.2D.Animation.Runtime">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
+    <Reference Include="Unity.2D.Tilemap.Extras">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Core.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.2D.Animation.Runtime">
-      <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Runtime.dll</HintPath>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Flow.Editor">
@@ -1105,12 +1106,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.InternalAPIEngineBridge.001.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
-      <HintPath>Library\ScriptAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.2D.Common.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.2D.Common.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Timeline">

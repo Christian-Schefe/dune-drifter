@@ -8,31 +8,70 @@ public class Arena
     public int size;
     public HexGridData<Piece> grid;
 
+    private List<Piece> movedThisTurn = new();
+    private List<Piece> spawnedThisTurn = new();
+
     public Arena(int size)
     {
         this.size = size;
         grid = new();
         grid.SetHexagonShape(size);
 
-        Queries.Get<GetMoveOptionsQuery>().SetResponder(pos =>
-        {
-            var piece = grid.data[pos];
-            if (piece == null) return new();
-            var moveTargets = piece.GetMoveTargets().Where(e => CanMovePiece(pos, e)).ToList();
-            var attackTargets = piece.GetAttackTargets().Where(e => CanAttackPiece(pos, e)).ToList();
-            return (moveTargets, attackTargets);
-        });
+        SpawnDefaultPieces();
     }
 
-    public bool CanSpawnPiece(Vector2Int at)
+    public List<Vector2Int> GetMoveTargets(Piece piece)
     {
-        return grid.data[at] == null;
+        var targets = piece.GetMoveTargets().Where(p => CanMovePiece(piece.pos, p));
+        return targets.ToList();
+    }
+
+    public List<Vector2Int> GetAttackTargets(Piece piece)
+    {
+        var targets = piece.GetAttackTargets().Where(p => CanAttackPiece(piece.pos, p));
+        return targets.ToList();
+    }
+
+    public void OnEndTurn()
+    {
+        foreach (var piece in movedThisTurn) piece.movedThisTurn = false;
+        foreach (var piece in spawnedThisTurn) piece.spawnedThisTurn = false;
+        movedThisTurn.Clear();
+        spawnedThisTurn.Clear();
+    }
+
+    public bool TryGetPiece(Vector2Int at, out Piece piece) => grid.data.TryGetValue(at, out piece) && piece != null;
+
+    private void SpawnDefaultPieces()
+    {
+        Vector2Int p1 = new(0, 1 - size);
+        Vector2Int p2 = new(0, size - 1);
+        SpawnPiece(p1, PieceType.Sphere, true);
+        SpawnPiece(p2, PieceType.Sphere, false);
+        grid.data[p1].movedThisTurn = false;
+        grid.data[p1].spawnedThisTurn = false;
+        grid.data[p2].movedThisTurn = false;
+        grid.data[p2].spawnedThisTurn = false;
+    }
+
+    public bool CanSpawnPiece(Vector2Int at, bool team)
+    {
+        if (!grid.Inside(at) || grid.data[at] != null) return false;
+
+        foreach (var n in grid.neighbours[at])
+        {
+            if (grid.data[n] != null && grid.data[n].team == team) return true;
+        }
+
+        return false;
     }
 
     public bool CanAttackPiece(Vector2Int from, Vector2Int to)
     {
         if (grid.data[from] == null) return false;
         var piece = grid.data[from];
+        if (piece.movedThisTurn) return false;
+        if (piece.spawnedThisTurn && !piece.HasBuff(PieceBuff.Charge)) return false;
 
         if (grid.data[to] == null || grid.data[to].team == piece.team) return false;
         var targetPiece = grid.data[from];
@@ -57,15 +96,31 @@ public class Arena
         if (grid.data[to] != null) return false;
 
         var piece = grid.data[from];
+        if (piece.movedThisTurn) return false;
+        if (piece.spawnedThisTurn && !piece.HasBuff(PieceBuff.Charge)) return false;
+
         var moveTargets = piece.GetMoveTargets();
         return moveTargets.Contains(to);
     }
 
-    public void SpawnPiece(Vector2Int at, PieceType type)
+    public void GiveBuff(Vector2Int at, PieceBuff buff)
     {
-        Piece piece = new(grid, at, true, type, PieceBuff.None);
+        var piece = grid.data[at];
+        piece.buffs |= buff;
+    }
+
+    public void TakeBuff(Vector2Int at, PieceBuff buff)
+    {
+        var piece = grid.data[at];
+        piece.buffs &= ~buff;
+    }
+
+    public void SpawnPiece(Vector2Int at, PieceType type, bool team)
+    {
+        Piece piece = new(grid, at, team, type, PieceBuff.None, false, true);
         grid.data[at] = piece;
-        Signals.Get<PieceSignal.Spawned>().Dispatch(at, piece);
+        Main.Events.pieceSpawned(piece, at);
+        spawnedThisTurn.Add(piece);
     }
 
     public void AttackPiece(Vector2Int from, Vector2Int to)
@@ -75,14 +130,16 @@ public class Arena
         if (targetPiece.buffs.HasFlag(PieceBuff.Shield))
         {
             targetPiece.buffs &= ~PieceBuff.Shield;
-            Signals.Get<PieceSignal.LostShield>().Dispatch(to, targetPiece);
+            Main.Events.pieceLostShield(targetPiece, to);
         }
         else
         {
             grid.data[to] = null;
         }
 
-        Signals.Get<PieceSignal.Attacked>().Dispatch(to, piece);
+        piece.movedThisTurn = true;
+        movedThisTurn.Add(piece);
+        Main.Events.pieceAttacked(piece, from, to);
     }
 
     public void MovePiece(Vector2Int from, Vector2Int to)
@@ -92,6 +149,8 @@ public class Arena
         grid.data[from] = null;
         piece.SetPosition(to);
 
-        Signals.Get<PieceSignal.Moved>().Dispatch(from, piece);
+        piece.movedThisTurn = true;
+        movedThisTurn.Add(piece);
+        Main.Events.pieceMoved(piece, from, to);
     }
 }

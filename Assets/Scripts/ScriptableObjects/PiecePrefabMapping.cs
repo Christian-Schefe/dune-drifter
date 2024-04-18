@@ -26,9 +26,9 @@ public class PiecePrefabMapping : ScriptableObject
 
         foreach (var entry in mappings)
         {
-            playerPrefabs[entry.pieceType] = team ? entry.playerPrefab : entry.opponentPrefab;
+            dict[entry.pieceType] = team ? entry.playerPrefab : entry.opponentPrefab;
         }
-        return playerPrefabs;
+        return dict;
     }
 
     public GameObject Get(Piece piece) => GetDict(piece.team)[piece.type];

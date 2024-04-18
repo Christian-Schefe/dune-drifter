@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,16 +17,16 @@ public class Run
     {
         ruleCards = new List<RuleCard>();
         currentLoopState = LoopState.Match;
-        currentMatchParams = new() { arenaSize = 6, handSize = 5 };
+        currentMatchParams = new() { arenaSize = 5, handSize = 5 };
         SetDefaultDeck();
     }
 
-    public void SetDefaultDeck()
+    private void SetDefaultDeck()
     {
-        List<IPlayCard> playCards = new();
+        List<PlayCard> playCards = new();
         for (int i = 0; i < 10; i++)
         {
-            playCards.Add(new SpawnPieceCard(PieceType.Protector));
+            playCards.Add(new PlayCard(PlayCardType.SpawnPiece, (PieceType.Protector, true)));
         }
         deck = new(playCards);
     }
@@ -35,14 +36,12 @@ public class Run
         currentLoopState = LoopState.Match;
         currentMatch = new(this, deck, currentMatchParams);
 
-        Log.Info("Match Started");
-        Signals.Get<MatchSignal.Start>().Dispatch(currentMatch);
+        Main.Events.matchStart();
     }
 
     public void EndMatch()
     {
-        Log.Info("Match Ended");
-        Signals.Get<MatchSignal.End>().Dispatch(currentMatch);
+        Main.Events.matchEnd();
 
         currentMatch = null;
         BeginShop();

@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 public static class Log
 {
@@ -39,11 +41,12 @@ public static class Log
         return obj switch
         {
             string stri => explicitString ? $"\"{stri}\"" : stri,
-            Object unityObj => $"{unityObj.GetType()}(\"{unityObj.name}\")",
-            DictionaryEntry entry => $"{ObjToString(entry.Key)}: {ObjToString(entry.Value)}",
-            System.Type type => $"Type({type})",
+            ITuple tuple => $"({TupleToStr(tuple)})",
             IDictionary dict => $"{{{IterToStr(dict)}}}",
             IEnumerable iter => $"[{IterToStr(iter)}]",
+            DictionaryEntry entry => $"{ObjToString(entry.Key)}: {ObjToString(entry.Value)}",
+            System.Type type => $"Type({type})",
+            Object unityObj => $"{unityObj.GetType()}(\"{unityObj.name}\")",
             null => "null",
             _ => obj.ToString(),
         };
@@ -52,5 +55,14 @@ public static class Log
     private static string IterToStr(IEnumerable iter, string sep = ", ")
     {
         return string.Join(sep, iter.Cast<object>().Select(e => ObjToString(e, true)));
+    }
+    private static string TupleToStr(ITuple tuple, string sep = ", ")
+    {
+        var strings = new List<string>();
+        for (int i = 0; i < tuple.Length; i++)
+        {
+            strings.Add(ObjToString(tuple[i], true));
+        }
+        return string.Join(sep, strings.ToArray());
     }
 }
