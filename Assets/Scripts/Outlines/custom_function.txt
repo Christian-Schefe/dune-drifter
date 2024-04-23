@@ -1,0 +1,9 @@
+float max_g = 0;
+float factor = 6.28318530718 / Samples;
+for (int i = 0; i < Samples; i++) {
+    float angle = i * factor; 
+    float2 offset = float2(cos(angle), sin(angle)) * Width;
+    float g = SAMPLE_TEXTURE2D(Tex,SS,saturate(UV + offset)).g;
+    max_g = max(max_g, g);
+}
+Out = max_g;
