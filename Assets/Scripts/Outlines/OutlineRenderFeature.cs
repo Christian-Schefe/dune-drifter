@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -10,11 +9,10 @@ public class OutlineRendererFeature : ScriptableRendererFeature
 {
     public class CustomRenderPass : ScriptableRenderPass
     {
-
-        private Settings settings;
+        private readonly Settings settings;
+        private readonly ProfilingSampler profiler;
+        private readonly List<ShaderTagId> shaderTagsList = new();
         private FilteringSettings filteringSettings;
-        private ProfilingSampler _profilingSampler;
-        private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         private RTHandle rtCustomColor, rtTempColor;
 
         public CustomRenderPass(Settings settings, string name)
@@ -22,12 +20,11 @@ public class OutlineRendererFeature : ScriptableRendererFeature
             this.settings = settings;
             filteringSettings = new FilteringSettings(RenderQueueRange.opaque, settings.layerMask);
 
-            // Use default tags
             shaderTagsList.Add(new ShaderTagId("SRPDefaultUnlit"));
             shaderTagsList.Add(new ShaderTagId("UniversalForward"));
             shaderTagsList.Add(new ShaderTagId("UniversalForwardOnly"));
 
-            _profilingSampler = new ProfilingSampler(name);
+            profiler = new ProfilingSampler(name);
         }
 
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
@@ -35,21 +32,17 @@ public class OutlineRendererFeature : ScriptableRendererFeature
             var colorDesc = renderingData.cameraData.cameraTargetDescriptor;
             colorDesc.depthBufferBits = 0;
 
-            // Set up temporary color buffer (for blit)
             RenderingUtils.ReAllocateIfNeeded(ref rtTempColor, colorDesc, name: "_TemporaryColorTexture");
 
-            // Set up custom color target buffer (to render objects into)
             if (settings.colorTargetDestinationID != "")
             {
                 RenderingUtils.ReAllocateIfNeeded(ref rtCustomColor, colorDesc, name: settings.colorTargetDestinationID);
             }
             else
             {
-                // colorDestinationID is blank, use camera target instead
                 rtCustomColor = renderingData.cameraData.renderer.cameraColorTargetHandle;
             }
 
-            // Using camera's depth target (that way we can ZTest with scene objects still)
             RTHandle rtCameraDepth = renderingData.cameraData.renderer.cameraDepthTargetHandle;
 
             ConfigureTarget(rtCustomColor, rtCameraDepth);
@@ -59,30 +52,31 @@ public class OutlineRendererFeature : ScriptableRendererFeature
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             CommandBuffer cmd = CommandBufferPool.Get();
-            // Set up profiling scope for Profiler & Frame Debugger
-            using (new ProfilingScope(cmd, _profilingSampler))
+
+            using (new ProfilingScope(cmd, profiler))
             {
-                // Command buffer shouldn't contain anything, but apparently need to
-                // execute so DrawRenderers call is put under profiling scope title correctly
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
 
-                // Draw Renderers to Render Target (set up in OnCameraSetup)
                 SortingCriteria sortingCriteria = renderingData.cameraData.defaultOpaqueSortFlags;
                 DrawingSettings drawingSettings = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
+                RenderStateBlock stateBlock = new(RenderStateMask.Depth)
+                {
+                    depthState = new DepthState(false, CompareFunction.Disabled)
+                };
+
                 if (settings.overrideMaterial != null)
                 {
                     drawingSettings.overrideMaterialPassIndex = settings.overrideMaterialPass;
                     drawingSettings.overrideMaterial = settings.overrideMaterial;
                 }
-                context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
+                context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings, ref stateBlock);
 
-                // Pass our custom target to shaders as a Global Texture reference
-                // In a Shader Graph, you'd obtain this as a Texture2D property with "Exposed" unticked
                 if (settings.colorTargetDestinationID != "")
+                {
                     cmd.SetGlobalTexture(settings.colorTargetDestinationID, rtCustomColor);
+                }
 
-                // Apply material (e.g. Fullscreen Graph) to camera
                 if (settings.blitMaterial != null)
                 {
                     RTHandle camTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
@@ -93,8 +87,7 @@ public class OutlineRendererFeature : ScriptableRendererFeature
                     }
                 }
             }
-            // Execute Command Buffer one last time and release it
-            // (otherwise we get weird recursive list in Frame Debugger)
+
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
             CommandBufferPool.Release(cmd);
@@ -102,18 +95,14 @@ public class OutlineRendererFeature : ScriptableRendererFeature
 
         public override void OnCameraCleanup(CommandBuffer cmd) { }
 
-        // Cleanup Called by feature below
         public void Dispose()
         {
-            if (settings.colorTargetDestinationID != "")
-                rtCustomColor?.Release();
+            if (settings.colorTargetDestinationID != "") rtCustomColor?.Release();
             rtTempColor?.Release();
         }
     }
 
-    // Exposed Settings
-
-    [System.Serializable]
+    [Serializable]
     public class Settings
     {
         public bool showInSceneView = true;
@@ -129,28 +118,28 @@ public class OutlineRendererFeature : ScriptableRendererFeature
         public Material blitMaterial;
     }
 
-    public Settings settings = new Settings();
+    public Settings settings = new();
 
-    // Feature Methods
-
-    private CustomRenderPass m_ScriptablePass;
+    private CustomRenderPass renderPass;
 
     public override void Create()
     {
-        m_ScriptablePass = new CustomRenderPass(settings, name);
-        m_ScriptablePass.renderPassEvent = settings._event;
+        renderPass = new CustomRenderPass(settings, name)
+        {
+            renderPassEvent = settings._event
+        };
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         CameraType cameraType = renderingData.cameraData.cameraType;
-        if (cameraType == CameraType.Preview) return; // Ignore feature for editor/inspector previews & asset thumbnails
+        if (cameraType == CameraType.Preview) return;
         if (!settings.showInSceneView && cameraType == CameraType.SceneView) return;
-        renderer.EnqueuePass(m_ScriptablePass);
+        renderer.EnqueuePass(renderPass);
     }
 
     protected override void Dispose(bool disposing)
     {
-        m_ScriptablePass.Dispose();
+        renderPass.Dispose();
     }
 }
